@@ -50,7 +50,7 @@ def count_cost(solution:List):
 
 def truck_ride_cost(locations:List,num_truck:int): # zwraca koszt dla jednej śmieciarki
     print(locations)
-    ride_cost = bin_locations[0][locations[0]]
+    ride_cost = bin_locations[0][locations[0]] # od bazy 0 do pierwszego na liscie
 
     for i in range(0, len(locations)):
 
@@ -69,17 +69,22 @@ def truck_ride_cost(locations:List,num_truck:int): # zwraca koszt dla jednej śm
 
     return ride_cost
 
-first_solution(list(range(0,20)),list(range(0,4)))
+first_solution(list(range(0,6)),list(range(0,3)))
 solution = first_solution(bin_locations, trucks_volume)
 count_cost(solution)
 
 ## dotad jest ok
 
-# przuklad TABU list
+# przyklad TABU list
 TABU_list = [(1,10),
              (3,2),
              (4,5)
              ]
+
+#blokowana kolejność elelmentów 2 po 3
+#dany eelemnt nie w smieciarce
+#dany element nie moze byc zmieniany przez operator ruchu
+#case typ zabronienia
 
 
 #tabu search
@@ -87,7 +92,7 @@ x = solution
 x_opt = solution
 
 for i in range (0,20):
-    while(1)# zmieniaj dopoki x jest zabronione
+    while(1)# zmieniaj dopoki x jest zabronione:
         x = change_solution(x)
         if(check(x))
             break
@@ -95,7 +100,7 @@ for i in range (0,20):
     if count_cost(x) < count_cost(x_opt):
         x_opt = x
 
-    # dekrementu drugi element krotki = skroc o 1 kadencje
+    # dekrementuj drugi element krotki = skroc o 1 kadencje
     # Dodaj nowe elementy do listy TABU
     # jesli kadnecja = 0 to usun zabronienie
 
@@ -111,3 +116,14 @@ def change_solution(x:List)->List:
 def add_to_TABU():
     TABU_list.append((3, 10))
     return None
+
+#srednoirweminowa sprawdz rozwizazania zanim zapisesz do pamieci
+#rozwiazania podobne nie zapisujemy na liscie
+# zapisać np 5 na roznych górkach
+
+#długotermiowa
+#smieciarki kosze ile razy dany kosz był w śmieciarce
+#gromadzenie wiedzy
+#jeśi nie poprawi to nie opłaca się korzystać
+#np możana klika pomysłów, potem sprawdzić który lepszy
+"""
