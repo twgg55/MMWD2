@@ -1,7 +1,7 @@
 from typing import List
 from copy import deepcopy
-import random  # Testowanie
-import time
+import random
+import math
 
 inf = -1  # TODO Rozwiazac ewentualne problemy z tym!
 
@@ -74,9 +74,8 @@ def sort_matrix_by_distance(matrix: List[List], start_index: int = None):
         helperek.clear()
         pass
 
-    zmiana = cost(matrix) - cost(new_matrix)
-    if zmiana > 0:  # Jesli macierz kosztow ulegla poprawie
-        matrix = new_matrix
+    if cost(matrix) - cost(new_matrix) > 0:  # Jesli macierz kosztow ulegla poprawie
+        matrix = deepcopy(new_matrix)
         del new_matrix
     else:  # Jesli wyzmaczona macierz nie jest lepsza
         del new_matrix
@@ -106,7 +105,8 @@ def create_cost_matrix(points_list: List):
             if row < col:
                 delta_x = abs(points_list[row][0]-points_list[col][0])
                 delta_y = abs(points_list[row][1]-points_list[col][1])
-                list_helper[col] = int((delta_x**2 + delta_y**2)**(1/2))  # Odleglosc w lini prostej
+                # list_helper[col] = int((delta_x**2 + delta_y**2)**(1/2))  # Odleglosc w lini prostej
+                list_helper[col] = (delta_x ** 2 + delta_y ** 2) ** (1 / 2)
             pass
         cost_matrix.append(deepcopy(list_helper))
         del list_helper
@@ -127,104 +127,137 @@ def sort_points_list(list_to_sort: List, given_order: List) -> List:
     return [list_to_sort[elem] for elem in given_order]
 
 
-#Parametry symulacji
-czy_pokazac_wykresy = True
-czy_pokazac_macierze_w_konsoli = True
-min_value = 0
-max_value = 100
-ilosc_punktow = 5
+def sort_cost_matrix_only_for_indexes(cost_matrix: List, index_list_to_visit: List, start_point_index: int) -> List:
+    _visited = [start_point_index]
+    wyrownanie = 0 if start_point_index in index_list_to_visit else 1
+    # len(index_list_to_visit) + wyrownanie  --> Sprawdzenie, czy nalezy wydluzyc poszukiwania w zaleznosci od tego,
+    # czy punkt startowy jest w liscie punktow do odwiedzenia
+    # start_point_index - index bazy!
+    _from = start_point_index
+    while len(_visited) < len(index_list_to_visit) + wyrownanie:
+        helper = deepcopy(cost_matrix[_from])  # Usuniecie inf z tablicy pomocniczej (funkcje min/max maja z tym problem, gdy stoi na poczatku)
+        for i in range(helper.count(inf)):
+            helper.pop(helper.index(inf))
+        _min_cost = max(helper)  # Znalezienie najwiekszej wartosci w tej liscie
+        del helper
+        _to = (cost_matrix[_from]).index(_min_cost)  #Dla jakiego indeksu istnieje najwieksza wartosc
+        for i in range(0, len(cost_matrix[_from])):
+            """
+            i != _from  -> wykluczenie przejscia w ten sam punkt
+            cost_matrix[_from][i] is not inf  --> zabronione przejscia odrzucamy
+            i not in _visited  -> odwiedzone przejscia rowniez
+            i in index_list_to_visit  --> punkt musi znajdowac sie na liscie tych, ktore mamy odwiedzic
+            """
+            if i != _from and cost_matrix[_from][i] is not inf and i not in _visited and i in index_list_to_visit:
+                if cost_matrix[_from][i] < _min_cost:
+                    _min_cost = cost_matrix[_from][i]
+                    _to = i  # Znaleziono punkt o mniejszym koszcie
+
+        _visited.append(_to)  # Dodaj punkt do odwiedzonych
+        _from = _to
+        # Koniec while, szukaj nastpenego polaczenia
+    return _visited[1:]  # Ucinam pierwszy punkt, poniewaz on bedzie tylko raz na poczatku calej listy (a nie w kazdym takim kawalku)
 
 
-# Stworzenie macierzy
-print("Parametry symulacji:")
-print("Ilosc_punktow: " + str(ilosc_punktow))
-print("Najmniejsza wartość wspolrzednych dla punktow: " + str(min_value))
-print("Najwieksza wartość wspolrzednych dla punktow: " + str(max_value))
+def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, _x_base: int = 0, _y_base: int = 0,
+                      list_of_lists: bool = False):
+    ###
+    # list_of_lists - zwracana lista ma byc lista list (dla kazdej smieciarki) czy lista pojedynczych elementow (ciag punktow)
+    ###
 
-print("\nRozpoczecie symulacji:")
-start = time.time()
-punkty = random_2dim_points(ilosc_punktow, max_value, min_value)
-czas_losowania = time.time() - start
-print("Losowanie punktow zajelo: " + str(czas_losowania) + " sekund")
-macierz_przed = create_cost_matrix(punkty)
-print("Stworzenie macierzy kosztow zajelo: " + str(time.time() - start - czas_losowania) + " sekund")
-koszt_przed = cost(macierz_przed)
+    if amount_trucks < 4:
+        Exception()
+    # Krotki: (x, y, r, sin, cos, index_w_liscie_i_macierzy)
+    base_index = points_list.index((_x_base, _y_base))
+    point_info = [(points_list[i][0], points_list[i][1], cost_matrix[base_index][i],
+                   ((points_list[i][1]-_x_base)/cost_matrix[base_index][i] if i != base_index else inf),
+                   ((points_list[i][0]-_y_base)/cost_matrix[base_index][i] if i != base_index else inf),
+                   i) for i in range(len(points_list))]
+    # ((_x_base-points_list[i][1])/cost_matrix[base_index][i] if cost_matrix[base_index][i] != inf else inf)
+    # (odleglosc danego punktu od punktu bazy)/odleglosc miedzy nimi
+    """
+    O co tu kaman? Wyliczajac sinusy i cosinusy musze wykluczyc opcje dzielenia przez zero. Czemu? 
+    Wiem co jest baza (podawane wspolrzedne w argumentach funckji), 
+    tworzac base_index policze rowniez odleglosc bazy od bazy, a nastpenie sinusy i cosinusy.
+    Nie moge tego ominac, poniewaz musze miec zgodne indeksy w point info jak i w cost_matrix oraz points_list
+    ALE
+    bede pamietal o tym, aby zawsze pomijac punkt bazy w point_info (Bo jaki jest kat miedzy punktem, a soba)
+    
+    Punktem odniesienia do wyliczania katow nie jest punkt (0, 0), a jest nim punkt BAZY, nie wazne gdzie jest
+    
+    """
+    # Lista list:
+    # Kazda strefa (smieciarka) ma przypisane do siebie punkty
+    points_per_area = []
 
-# Sposob nr 1
-czas_sortowania_f1 = time.time()
-macierz_po, odwiedzone = sort_matrix_by_distance(macierz_przed)
-czas_sortowania_f1 = time.time() - czas_sortowania_f1
-print("\nCzas sortowania dla F1: " + str(czas_sortowania_f1) + " sekund")
-koszt_po = cost(macierz_po)
-roznica = koszt_przed - koszt_po
-print("Poprawa o: " + str(roznica) + ", czyli o " + str(round(roznica*100/koszt_przed)) + "%.")
+    def porownanie(value, _min, _max) -> bool:
+        if _min > _max:
+            return True if _max < value <= _min else False
+        return True if _min < value <= _max else False
 
-#Sposob nr 2
-czas_sortowania_f2 = time.time()
-macierz_po_od_0_0, odwiedzone_0_0 = sort_matrix_by_distance(macierz_przed, 0)
-czas_sortowania_f2 = time.time() - czas_sortowania_f2
-print("\nCzas sortowania dla F2: " + str(czas_sortowania_f2) + " sekund")
-koszt_po = cost(macierz_po_od_0_0)
-roznica = koszt_przed - koszt_po
-print("Poprawa o: " + str(roznica) + ", czyli o " + str(round(roznica*100/koszt_przed)) + "%.")
+    for i in range(amount_trucks):
+        # angle_min = i * 2*math.pi/amount_trucks
+        # angle_max = (i+1) * 2*math.pi/amount_trucks
+        sin_min = math.sin(i * 2 * math.pi / amount_trucks)
+        sin_max = math.sin((i+1) * 2 * math.pi / amount_trucks)
+        cos_min = math.cos(i * 2 * math.pi / amount_trucks)
+        cos_max = math.cos((i+1) * 2 * math.pi / amount_trucks)
 
-if czy_pokazac_wykresy:
-    #print("Lista punktow (x,y), ktore sa docelowymi lokalizacjami")
-    print(punkty)
-    print(sort_points_list(punkty, odwiedzone_0_0))
-    if czy_pokazac_macierze_w_konsoli:
-        print("Macierz wylosowana: ")
-        print_matrix(macierz_przed)
-        print("\n\n")
-        print("Macierz posortowana F1 (od najkrotszego polaczenia): ")
-        print_matrix(macierz_po)
-        print("\n\n")
-        print("Macierz posortowana F2 (od bazy): ")
-        print_matrix(macierz_po_od_0_0)
-        print("\n\n")
+        helper_sin = sin_max
+        helper_cos = cos_max
+        if cos_min * cos_max < 0:
+            # Rozne znaki cosinusow -> sinus osiaga maksimum w srodku przedzialu
+            # sin zaczal juz malec
+            helper_sin = 1 if sin_min > 0 else -1
+            sin_min = helper_sin * min([abs(sin_min), abs(sin_max)])
+        if sin_min * sin_max < 0:
+            helper_cos = 1 if cos_min > 0 else -1
+            cos_min = helper_cos * min([abs(cos_min), abs(cos_max)])
+            pass
+        sin_max = helper_sin
+        cos_max = helper_cos
+        del helper_sin, helper_cos
+        helper_list = []
 
-    import matplotlib.pyplot as plt
+        for elem in point_info:
+            #  0, 1, 2, 3,   4,   5
+            # (x, y, r, sin, cos, index_w_liscie_i_macierzy)
+            if elem[0] != _x_base or elem[1] != _y_base:
 
-    # Parametry wyswietlania wykresow
-    y_min = -1
-    y_max = max_value+1
-    x_min = -1
-    x_max = max_value+1
+                if porownanie(elem[3], sin_min, sin_max) and porownanie(elem[4], cos_min, cos_max):
+                    helper_list.append(elem[5])
+                    # print(str(elem) + " OK")
+                    pass
+                else:
+                    # print(str(elem) + "NOK")
+                    pass
 
-    plt.subplot(2, 2, 1)
-    plt.scatter([i[0] for i in punkty], [i[1] for i in punkty], c='r', marker='.')
-    plt.xlabel('Wylosowane punkty')
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.grid()
+        points_per_area.append(deepcopy(helper_list))
+        del helper_list, sin_max, sin_min, cos_max, cos_min
+    # Po tym forze, mamy podzial na strefy (rowny podzial kątowy)
 
-    plt.subplot(2, 2, 2)
-    plt.scatter([i[0] for i in punkty], [i[1] for i in punkty], c='r')
-    plt.plot([i[0] for i in punkty], [i[1] for i in punkty])
-    plt.plot([i[0] for i in punkty[0:2]], [i[1] for i in punkty[0:2]], c='r')
-    plt.xlabel('Losowa kolejnosc')
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.grid()
+    # Czas na sortowanie xD
+    route = [base_index]
+    route_lists_in_list = [base_index]
+    for i in range(len(points_per_area)):
+        if list_of_lists:
+            route_lists_in_list.append(sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index))
+        else:
+            route = route + sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index)
+        pass
 
-    plt.subplot(2, 2, 3)
-    plt.scatter([i[0] for i in punkty], [i[1] for i in punkty], c='r')
-    plt.plot([punkty[i][0] for i in odwiedzone], [punkty[i][1] for i in odwiedzone])
-    plt.plot([punkty[i][0] for i in odwiedzone[0:2]], [punkty[i][1] for i in odwiedzone[0:2]], c='r')
-    plt.xlabel('F1: Start od najkrotszego polaczenia w calej macierzy')
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.grid()
+    # Gdy otrzymalismy juz kolejnosc zapisu, nalezy zmienic te macierz
+    # Zamiana kolumn, wierszy wedlug wyznaczonej kolejnosci
+    new_matrix = []
+    for i in range(0, len(cost_matrix)):
+        helperek = []
+        for j in range(0, len(cost_matrix[i])):
+            helperek.append(cost_matrix[route[i]][route[j]])
+            pass
+        new_matrix.append(deepcopy(helperek))
+        helperek.clear()
+        pass
 
-    plt.subplot(2, 2, 4)
-    plt.scatter([i[0] for i in punkty], [i[1] for i in punkty], c='r')
-    plt.plot([punkty[i][0] for i in odwiedzone_0_0], [punkty[i][1] for i in odwiedzone_0_0])
-    plt.plot([punkty[i][0] for i in odwiedzone_0_0[0:2]], [punkty[i][1] for i in odwiedzone_0_0[0:2]], c='r')
-    plt.xlabel('F2: Start od bazy do najblizszego punktu')
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.grid()
-    plt.show()
-
-
-
+    if list_of_lists:
+        return new_matrix, route_lists_in_list
+    return new_matrix, route
