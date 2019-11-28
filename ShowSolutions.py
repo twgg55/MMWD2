@@ -66,12 +66,3 @@ def show_routes(routes_lists: List, xy_points: List, colours: List[str] = None, 
             plt.show()
         pass
     pass
-
-
-Punkty = [(0, 0), (44, 8), (56, 66), (43, 99), (11, 40), (15, 42), (1, 10)]
-Trasy = [[0, 1, 2, 5, 6, 0],
-         [0, 3, 4, 0]]
-
-
-show_routes(Trasy, Punkty, separate_plots=True, arrow=True)
-
