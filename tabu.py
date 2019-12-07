@@ -55,6 +55,8 @@ def count_cost(solution: List):  # funkcja kosztu dla sollution
 
 def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej śmieciarki
     # print(locations)
+    if locations == []:
+        return 0
     trucks_returns[num_truck] = 0
     ride_cost = bin_locations[0][locations[0]]  # od bazy 0 do pierwszego na liscie
 
@@ -138,8 +140,11 @@ def ch_swap(solution: List) -> List:
     for route in new_solution:
         if(len(route)>=2):
             pair = random.sample(range(0,len(route)), 2)
-            route[pair[0]],route[pair[1]]=route[pair[1]],route[pair[0]]
-    return new_solution
+            if check_ban_t1(route[pair[0]]) and check_ban_t1(route[pair[1]]):
+                route[pair[0]],route[pair[1]] = route[pair[1]],route[pair[0]]
+                if check_ban_t2(new_solution) and check_ban_t3(new_solution):
+                    return new_solution
+    return solution
 
 def ch_truck(solution: List) -> List:   #zamien smieciarki jesli ta o mniejszej pojemnosci wykonala wiecej powrotow
     new_solution = deepcopy(solution)
@@ -147,16 +152,31 @@ def ch_truck(solution: List) -> List:   #zamien smieciarki jesli ta o mniejszej 
     truck_min = trucks_returns.index(min(trucks_returns))    # zwraca ktora smieciarka wykonala najmniej powrotow
     if trucks_volume[truck_max] < trucks_volume[truck_min]:
         new_solution[truck_max],new_solution[truck_min] = new_solution[truck_min],new_solution[truck_max]
+        if check_ban_t3(new_solution):
+            return new_solution
+
+    return solution
+
+def ch_bins(solution: List) -> List:
+    new_solution = deepcopy(solution)
+    random_bin = random.randint(1, len(bin_locations)-1)
+    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0]
+
+    if check_ban_t1(random_bin) == False:
+        return solution
+
+    del(new_solution[bin_pos[0]][bin_pos[1]])
+    random_truck = random.randint(0,len(new_solution)-1)
+    new_bin_pos = random.randint(0,len(new_solution[random_truck]))
+
+    new_solution[random_truck].insert(new_bin_pos, random_bin)
+    if check_ban_t2(new_solution) and check_ban_t3(new_solution):
+       return new_solution
+
     return new_solution
 
-print(solution)
-ch_swap(solution)
-print("koniec")
 
-#print(solution)
-#print(trucks_returns)
-#ch_swap(solution)
-#print(solution)
+
 
 ''' Funkcjie zabraniajace:
     ban - zabron rozwiazaie
@@ -217,6 +237,8 @@ def ban_max3(solution: List):
 '''
 #jesli funkcja chce zmienic i ty kosz to zwroc False
 def check_ban_t1(point:int)-> bool:
+    if TABU[1] == []:
+        return True
     banned_points = []
     for pair in TABU[1]:
         banned_points.append(pair[0])
@@ -227,6 +249,8 @@ def check_ban_t1(point:int)-> bool:
 
 #jesli w nowym rozwiazaniu kosze z Tabu sa obok siebie zroci False
 def check_ban_t2(solution: List) -> bool:
+    if TABU[2] == []:
+        return True
     for triple in TABU[2]:
         pos_point1 = [(index, row.index(triple[0])) for index, row in enumerate(solution) if triple[0] in row]
         pos_point2 = [(index, row.index(triple[1])) for index, row in enumerate(solution) if triple[1] in row]
@@ -239,7 +263,8 @@ def check_ban_t2(solution: List) -> bool:
 
 #jesli w nowym rozwiazaniu kosz jesz w zabronionej smieciarce zwroc False
 def check_ban_t3(solution: List) -> bool:
-    #print(TABU[3])
+    if TABU[3] == []:
+        return True
     for triple in TABU[3]:
         pos_point = [(index, row.index(triple[0])) for index, row in enumerate(solution) if triple[0] in row]
         if pos_point[0][0] == triple[1]:    #czy kosz jest w zabronionej smieciarce
@@ -250,27 +275,42 @@ def check_ban_t3(solution: List) -> bool:
 
 #### END OF PART THREE ####
 
+print(TABU)
+print(solution)
+print(ch_swap(solution))
+
+
+
+
+
 #### TABU SEARCH ####
 x = deepcopy(solution)
 x_opt = deepcopy(solution)
 solution_change = True  # Po to aby pokazac pierwsza opcje
-#ShowSolutions.show_routes(x_opt, bin_point_list)
-for i in range(0, 1000):
+ShowSolutions.show_routes(x_opt, bin_point_list)
+for i in range(0, 10000):
     #if (i < 5):
 
     # w kazdej funckj change sprawdzamy czy ruch dozwolony
     # plus uwzględnienie aspiracji
     '''zmien rozwiazanie'''
 
+    xx = deepcopy(x_opt)
     change_probability = random.randint(1, 100)
-    if(change_probability in (1, 20)):
-        x = ch_returns(x_opt)
-    elif(change_probability in (20, 50)):
-        x = ch_swap(x_opt)
-    elif change_probability in (50, 70):
-        x = ch_truck(x_opt)
-    elif change_probability in (70, 100):
-        pass
+
+    if(change_probability in range(1,25)):
+       # print('1')
+        xx = ch_returns(xx)
+    elif(change_probability in range(25, 50)):
+       # print('2')
+        xx = ch_swap(xx)
+    elif change_probability in range(50, 75):
+       # print('3')
+        xx = ch_truck(xx)
+    elif change_probability in range(75, 100):
+       # print('4')
+        xx = ch_bins(xx)
+    x=deepcopy(xx)
 
 
     if count_cost(x) < count_cost(x_opt):
@@ -289,8 +329,9 @@ for i in range(0, 1000):
     '''Dodaj nowe elementy do listy TABU'''
 
     tabu_probability = random.randint(1, 100)
-    if tabu_probability in (1,10):
-        ban_max(x_opt)
+    if tabu_probability in (1,50):
+        pass
+        #ban_max(x_opt)
     elif tabu_probability in (20,30):
          pass
     elif tabu_probability in (40, 50):
@@ -301,9 +342,11 @@ for i in range(0, 1000):
 
     '''przedstawianie wyniku'''
     if solution_change:
-        ShowSolutions.show_routes(x_opt, bin_point_list)
+        #ShowSolutions.show_routes(x_opt, bin_point_list)
         solution_change = False
 
+print("ostatnie")
+ShowSolutions.show_routes(x_opt, bin_point_list)
 '''
 #srednoirweminowa sprawdz rozwiazania zanim zapisesz do pamieci
 #rozwiazania podobne nie zapisujemy na liscie
