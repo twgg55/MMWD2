@@ -19,11 +19,11 @@ bin_locations = [[inf, 3,   6,   8,  10,  15,  20, 21],
                  [21,  17, 11,   9,   7,   5,   5, inf]
                  ]
 
-bin_locations, bin_point_list = MatrixSegregation.make_cost_matrix(14, 3)  # 7 punktow, 3 smieciarki
+bin_locations, bin_point_list = MatrixSegregation.make_cost_matrix(50, 12)  # 7 punktow, 3 smieciarki
 
-rubbish_in_location = [0, 40, 30, 30, 50, 90, 60, 50]*2  # ilosc smieci od kazdego miasta
+rubbish_in_location = [0, 4, 3, 3, 5, 8, 10, 4]*10  # ilosc smieci od kazdego miasta
                                                         # index 0 baza
-trucks_volume = [50, 100,60]  # pojemnosci
+trucks_volume = [500, 1000,600]*4  # pojemnosci
 # koniec danych wejsciowych
 
 trucks_filled_volume = [0] * len(trucks_volume)
@@ -122,8 +122,8 @@ def print_TABU(TABU: Dict):
 '''
 def ch_returns(solution: List) -> List:
     new_solution = deepcopy(solution)
-    truck_max=trucks_returns.index(max(trucks_returns)) # zwraca ktora smieciarka wykonala najwiecej powrotow
-    truck_min= trucks_returns.index(min(trucks_returns))  # zwraca ktora smieciarka wykonala najmniej powrotow
+    truck_max = trucks_returns.index(max(trucks_returns)) # zwraca ktora smieciarka wykonala najwiecej powrotow
+    truck_min = trucks_returns.index(min(trucks_returns))  # zwraca ktora smieciarka wykonala najmniej powrotow
 
     #sprawdz czy kosz ktory funkcja chce zmienic nie jest w TABU
     if check_ban_t1(new_solution[truck_max][-1]):
@@ -160,7 +160,8 @@ def ch_truck(solution: List) -> List:   #zamien smieciarki jesli ta o mniejszej 
 def ch_bins(solution: List) -> List:
     new_solution = deepcopy(solution)
     random_bin = random.randint(1, len(bin_locations)-1)
-    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0]
+    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0] # bin_pos ->[ktora smieciarka, ktory kosz z kolei] - indexy elementu w macierzy
+    #print("binpos",bin_pos)
 
     if check_ban_t1(random_bin) == False:
         return solution
@@ -175,7 +176,53 @@ def ch_bins(solution: List) -> List:
 
     return new_solution
 
+def ch_del_max(solution: List): # usun najdalszy przejazd jaki wystepuje w rozwiazaniu
+    new_solution = deepcopy(solution)
+    max_p2p_for_truck = [] #maksymalny przejazd dla kazdej smieciarki
+    max_p2p_for_truck_value = [] #i jego wartość
+    for route in solution:
+        #print("route: ", route)
+        if len(route) > 2:
+            p2p_values = []
+            for i in range( len(route) - 1):
+                p2p_values.append(bin_locations[route[i]][route[i + 1]])
+            #print(p2p_values)
 
+            od = route[p2p_values.index(max(p2p_values))]
+            do = route[p2p_values.index(max(p2p_values)) + 1]
+            max_p2p_for_truck.append([od, do])
+            max_p2p_for_truck_value.append(bin_locations[od][do])
+
+        elif len(route) == 2:
+            max_p2p_for_truck.append([route[0], route[1]])
+            max_p2p_for_truck_value.append(bin_locations[route[0]][route[1]])
+
+    index_of_max = max_p2p_for_truck_value.index(max(max_p2p_for_truck_value)) #zwroci index najdluzszego przejazdu
+    [od, do] = max_p2p_for_truck[index_of_max]
+    #print(od,do)
+
+    #przenies losowy kosz z wybranej pary [od do] do innej losowej smieciarki
+    if random.randint(0, 1):
+        random_bin = od
+    else:
+        random_bin = do
+
+    if check_ban_t1(random_bin) == False:
+        return solution
+
+    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0]
+
+    del(new_solution[bin_pos[0]][bin_pos[1]])
+    random_truck = random.randint(0,len(new_solution)-1)
+    new_bin_pos = random.randint(0,len(new_solution[random_truck]))
+
+    new_solution[random_truck].insert(new_bin_pos, random_bin)
+    if check_ban_t2(new_solution) and check_ban_t3(new_solution):
+       return new_solution
+
+    return new_solution
+   # tabu_iteration = 10 pozostalosp po ban_max2
+   # add_to_TABU(TABU, [od, do, tabu_iteration], 2)
 
 
 ''' Funkcjie zabraniajace:
@@ -183,18 +230,18 @@ def ch_bins(solution: List) -> List:
 1) policz max przejazd dla smieciarki i zabron go
 '''
 
-def ban_max(solution: List):
+def ban_max(solution: List): # zabron najdluższe przejazdy dla kazdej ze smieciarek
     for route in solution:
         if (len(route) > 2):
             p2p_values = []
             for i in range(len(route) - 1):
                 p2p_values.append(bin_locations[route[i]][route[i + 1]])
-                # print(p2p_values)
+            print(p2p_values)
 
             od = route[p2p_values.index(max(p2p_values))]
             do = route[p2p_values.index(max(p2p_values)) + 1]
-            # print(od, do)
-            # print(p2p_values.index(max(p2p_values)))
+            print(od, do)
+            print(p2p_values.index(max(p2p_values)))
 
             tabu_iteration = 5  # mozna wybrac na ile iteracji
             # zabroń i zmień(opcjonalnie)
@@ -202,31 +249,22 @@ def ban_max(solution: List):
 
     # zapisc nie do tabu tylko zrobić liste i zrobic max dla calosci
 
-def ban_max2(solution: List): # zabronic najdalszy przejazd
-    max_p2p_for_truck = [] #maksymalny przejazd dla kazdej smieciarki
-    max_p2p_for_truck_value = [] #i jego wartość
-    p2p_values = []
+def ban_min(solution: List):# zabron zmeniac najkrotszych odcinkow
     for route in solution:
-        if len(route) > 2:
+        if (len(route) > 2):
+            p2p_values = []
             for i in range(len(route) - 1):
                 p2p_values.append(bin_locations[route[i]][route[i + 1]])
-                # print(p2p_values)
+            #print(p2p_values)
 
-            od = route[p2p_values.index(max(p2p_values))]
-            do = route[p2p_values.index(max(p2p_values)) + 1]
-            max_p2p_for_truck.append([od,do])
-            max_p2p_for_truck_value.append(bin_locations[od][do])
+            od = route[p2p_values.index(min(p2p_values))]
+            do = route[p2p_values.index(min(p2p_values)) + 1]
+            #print(od, do)
+            #print(p2p_values.index(max(p2p_values)))
+            tabu_iteration = 100
+            add_to_TABU(TABU, [od, tabu_iteration], 1)  # zabron
+            add_to_TABU(TABU, [do, tabu_iteration], 1)  # zabron
 
-        elif len(route) == 2:
-            max_p2p_for_truck.append([route[0], route[1]])
-            max_p2p_for_truck_value.append(bin_locations[route[0]][route[1]])
-
-    index_of_max = max_p2p_for_truck_value.index(max(max_p2p_for_truck_value)) #zwroci index najdluzzego przejazdu
-    [od, do] = max_p2p_for_truck[index_of_max]
-    #print(od,do)
-
-    tabu_iteration = 10
-    add_to_TABU(TABU, [od, do, tabu_iteration], 2)
 
 def ban_max3(solution: List):
     print(max(solution))
@@ -277,46 +315,69 @@ def check_ban_t3(solution: List) -> bool:
 
 print(TABU)
 print(solution)
-print(ch_swap(solution))
+ban_min(solution)
+
+print(TABU)
+
+#ch_del_max(solution)
+print('TYLE')
 
 
+#### PART FOUR ####
+#Memories
 
+medium_term_memory = [] #lista najlepszych rozwiązan
+iterations_without_change = 0
+
+####END OF PART FOUR ####
 
 
 #### TABU SEARCH ####
+
 x = deepcopy(solution)
 x_opt = deepcopy(solution)
 solution_change = True  # Po to aby pokazac pierwsza opcje
 ShowSolutions.show_routes(x_opt, bin_point_list)
-for i in range(0, 10000):
+for i in range(0, 100000):
+    if(i%1000==0):
+        print(i)
     #if (i < 5):
 
     # w kazdej funckj change sprawdzamy czy ruch dozwolony
     # plus uwzględnienie aspiracji
-    '''zmien rozwiazanie'''
 
+    '''zmien rozwiazanie'''
     xx = deepcopy(x_opt)
     change_probability = random.randint(1, 100)
 
-    if(change_probability in range(1,25)):
+    #if(change_probability in range(1,60)):
        # print('1')
-        xx = ch_returns(xx)
-    elif(change_probability in range(25, 50)):
+     #   xx = ch_returns(xx)
+    if(change_probability in range(1, 20)):
        # print('2')
         xx = ch_swap(xx)
-    elif change_probability in range(50, 75):
+    if change_probability in range(20, 40):
        # print('3')
         xx = ch_truck(xx)
-    elif change_probability in range(75, 100):
+    if change_probability in range(40, 50):
        # print('4')
         xx = ch_bins(xx)
+    if change_probability in range(50,100):
+        xx = ch_del_max(xx)
     x=deepcopy(xx)
+
+    #print(x, " -> ", count_cost(x))
 
 
     if count_cost(x) < count_cost(x_opt):
-        print(x_opt, " -> ",count_cost(x))
+        #print(x_opt, " -> ",count_cost(x))
+        #print('ok')
         x_opt = deepcopy(x)
+        medium_term_memory.append(x_opt)
         solution_change = True
+        iterations_without_change = 0
+    else:
+        iterations_without_change = iterations_without_change + 1
 
     '''skroc o 1 kadencje'''
     for type in TABU:
@@ -329,15 +390,28 @@ for i in range(0, 10000):
     '''Dodaj nowe elementy do listy TABU'''
 
     tabu_probability = random.randint(1, 100)
-    if tabu_probability in (1,50):
+    if tabu_probability in (1,2):
         pass
-        #ban_max(x_opt)
+        ban_min(x_opt)
     elif tabu_probability in (20,30):
          pass
     elif tabu_probability in (40, 50):
         pass
     elif tabu_probability in (50, 100):
         pass
+
+    '''Pamiec srednioterminowa'''
+
+    if iterations_without_change >= 500:
+        if len(medium_term_memory) > 0:
+            #print('YUP')
+           # print("iterations_without_change: ", iterations_without_change)
+           # print("medium_term_memory:", medium_term_memory)
+            #x_opt = deepcopy(medium_term_memory[0])
+            del medium_term_memory[0]
+
+        else:
+            pass # dywersyfikacjia
 
 
     '''przedstawianie wyniku'''
@@ -347,8 +421,11 @@ for i in range(0, 10000):
 
 print("ostatnie")
 ShowSolutions.show_routes(x_opt, bin_point_list)
+print(medium_term_memory)
+print(iterations_without_change)
+print(x_opt)
 '''
-#srednoirweminowa sprawdz rozwiazania zanim zapisesz do pamieci
+#srednoirweminowa sprawdz rozwiazania zanim zapiszesz do pamieci
 #rozwiazania podobne nie zapisujemy na liscie
 # zapisać np 5 na roznych górkach
 
