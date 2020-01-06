@@ -76,6 +76,10 @@ def sort_matrix_by_distance(matrix: List[List], start_index: int = None):
         pass
 
     if cost(matrix) - cost(new_matrix) > 0:  # Jesli macierz kosztow ulegla poprawie
+        print('Funckja: "sort_matrix_by_distance", porownanie kosztow starej macierzy (wylosowanej) oraz tej posortowanej przez te funkcje:')
+        print('koszt starej macierzy: ', cost(matrix), '\tkoszt nowej macierzy: ', cost(new_matrix), 'Koniec raportu\n')
+
+
         matrix = deepcopy(new_matrix)
         del new_matrix
     else:  # Jesli wyzmaczona macierz nie jest lepsza
@@ -105,10 +109,10 @@ def create_cost_matrix(points_list: List):
             if row == col:
                 list_helper[col] = inf
             if row < col:
-                delta_x = abs(points_list[row][0] - points_list[col][0])
-                delta_y = abs(points_list[row][1] - points_list[col][1])
+                delta_x = int(abs(points_list[row][0] - points_list[col][0]))
+                delta_y = int(abs(points_list[row][1] - points_list[col][1]))
                 # list_helper[col] = int((delta_x**2 + delta_y**2)**(1/2))  # Odleglosc w lini prostej
-                list_helper[col] = (delta_x ** 2 + delta_y ** 2) ** (1 / 2)
+                list_helper[col] = int((delta_x ** 2 + delta_y ** 2) ** (1 / 2))
             pass
         cost_matrix.append(deepcopy(list_helper))
         del list_helper
@@ -170,7 +174,7 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     ###
 
     if amount_trucks < 4:
-        Exception()
+        Exception('Funckja: "sort_matrix_areas"\nMinimalna liczba smieciarek to 4. Wprowadzono ', amount_trucks, ' smieciarek!\n')
     # Krotki: (x, y, r, sin, cos, index_w_liscie_i_macierzy)
     base_index = points_list.index((_x_base, _y_base))
     point_info = [(points_list[i][0], points_list[i][1], cost_matrix[base_index][i],
@@ -244,6 +248,9 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     route = [base_index]
     route_lists_in_list = [base_index]
     for i in range(len(points_per_area)):
+        """route_lists_in_list.append(sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index))
+        route = route + sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index)"""
+
         if list_of_lists:
             route_lists_in_list.append(sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index))
         else:
@@ -253,7 +260,11 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     # Gdy otrzymalismy juz kolejnosc zapisu, nalezy zmienic te macierz
     # Zamiana kolumn, wierszy wedlug wyznaczonej kolejnosci
     new_matrix = []
-    for i in range(0, len(cost_matrix)):
+    # for i in range(0, len(cost_matrix)):
+    print('\nRaport funkcji: "sort_matrix_areas" - ilosc znalezionych punktow: ', len(route))
+    print('Punktow w macierzy jest: ', len(cost_matrix))
+
+    for i in range(0, len(cost_matrix)-1):
         helperek = []
         for j in range(0, len(cost_matrix[i])):
             helperek.append(cost_matrix[route[i]][route[j]])
@@ -261,6 +272,10 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
         new_matrix.append(deepcopy(helperek))
         helperek.clear()
         pass
+
+
+    print('Funckja: "sort_matrix_areas", koszt trasy wyznaczonej przez te funkcje: ')
+    print('koszt nowej macierzy: ', cost(new_matrix), 'Koniec raportu\n')
 
     if list_of_lists:
         return new_matrix, route_lists_in_list
@@ -275,5 +290,16 @@ def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int
         cost_matrix, route = sort_matrix_by_distance(cost_matrix, 0)
     elif function_id == 2:
         cost_matrix, route = sort_matrix_areas(cost_matrix, points, amount_trucks)
+
+    new_points = []
+    # Sortowanie listy punktow (x, y)
+    for numer_wierzcholka in route:
+        new_points.append(points[numer_wierzcholka])
+    print('\nRaport funkcji: "make_cost_matrix"')
+    print('Stare punkty: ', points, '\nNowe punkty: ', new_points)
+    print('\nilosc wylosowanych punktow: ', len(points), 'powinno ich byc: ', amount_of_points)
+    print('ilosc punktow po sortowaniu: ', len(new_points))
+
+    points = new_points
 
     return cost_matrix, points
