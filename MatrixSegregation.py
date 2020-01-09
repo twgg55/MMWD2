@@ -278,6 +278,10 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     print('Licznik: ', licznik)
     print('Ilosc: ', [len(elem) for elem in points_per_area])
     print('Razem: ', sum([len(elem) for elem in points_per_area]))
+<<<<<<< HEAD
+=======
+
+>>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
     #Pominieto:
     print("Pominieto: ")
     for point in point_info:
@@ -346,4 +350,8 @@ def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int
 
     points = new_points
 
+<<<<<<< HEAD
     return cost_matrix, points, ilosc_punktow_na_strefe
+=======
+    return cost_matrix, points, ilosc_punktow_na_strefe
+>>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
