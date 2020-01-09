@@ -109,10 +109,10 @@ def create_cost_matrix(points_list: List):
             if row == col:
                 list_helper[col] = inf
             if row < col:
-                delta_x = int(abs(points_list[row][0] - points_list[col][0]))
-                delta_y = int(abs(points_list[row][1] - points_list[col][1]))
+                delta_x = abs(points_list[row][0] - points_list[col][0])
+                delta_y = abs(points_list[row][1] - points_list[col][1])
                 # list_helper[col] = int((delta_x**2 + delta_y**2)**(1/2))  # Odleglosc w lini prostej
-                list_helper[col] = int((delta_x ** 2 + delta_y ** 2) ** (1 / 2))
+                list_helper[col] = (delta_x ** 2 + delta_y ** 2) ** (1 / 2)
             pass
         cost_matrix.append(deepcopy(list_helper))
         del list_helper
@@ -172,17 +172,25 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     ###
     # list_of_lists - zwracana lista ma byc lista list (dla kazdej smieciarki) czy lista pojedynczych elementow (ciag punktow)
     ###
+    #print("Otrzymano: ", len(points_list), ' punktow.')
 
     if amount_trucks < 4:
         Exception('Funckja: "sort_matrix_areas"\nMinimalna liczba smieciarek to 4. Wprowadzono ', amount_trucks, ' smieciarek!\n')
     # Krotki: (x, y, r, sin, cos, index_w_liscie_i_macierzy)
     base_index = points_list.index((_x_base, _y_base))
+    """point_info = [(points_list[i][0], points_list[i][1], cost_matrix[base_index][i],
+                   ((points_list[i][0] - _x_base) / cost_matrix[base_index][i] if i != base_index else inf),
+                   ((points_list[i][1] - _y_base) / cost_matrix[base_index][i] if i != base_index else inf),
+                   i) for i in range(len(points_list))]"""
     point_info = [(points_list[i][0], points_list[i][1], cost_matrix[base_index][i],
-                   ((points_list[i][1] - _x_base) / cost_matrix[base_index][i] if i != base_index else inf),
-                   ((points_list[i][0] - _y_base) / cost_matrix[base_index][i] if i != base_index else inf),
+                   ((points_list[i][0] - _x_base) / cost_matrix[base_index][i]),
+                   ((points_list[i][1] - _y_base) / cost_matrix[base_index][i]),
                    i) for i in range(len(points_list))]
     # ((_x_base-points_list[i][1])/cost_matrix[base_index][i] if cost_matrix[base_index][i] != inf else inf)
     # (odleglosc danego punktu od punktu bazy)/odleglosc miedzy nimi
+    print("Wyliczono: ", len(point_info), ' punktow.')
+
+
     """
     O co tu kaman? Wyliczajac sinusy i cosinusy musze wykluczyc opcje dzielenia przez zero. Czemu? 
     Wiem co jest baza (podawane wspolrzedne w argumentach funckji), 
@@ -197,11 +205,15 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     # Lista list:
     # Kazda strefa (smieciarka) ma przypisane do siebie punkty
     points_per_area = []
+    # visited_points = []  # Lista punktow, ktore zostaly przyporzadkowane do strefy
+    # licznik = 0
+    number_of_points_per_area = []  # ilosc punktow w kazdej strefie
+    counter = 0
 
     def porownanie(value, _min, _max) -> bool:
         if _min > _max:
-            return True if _max < value <= _min else False
-        return True if _min < value <= _max else False
+            return True if _max <= value <= _min else False
+        return True if _min <= value <= _max else False
 
     for i in range(amount_trucks):
         # angle_min = i * 2*math.pi/amount_trucks
@@ -210,6 +222,13 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
         sin_max = math.sin((i + 1) * 2 * math.pi / amount_trucks)
         cos_min = math.cos(i * 2 * math.pi / amount_trucks)
         cos_max = math.cos((i + 1) * 2 * math.pi / amount_trucks)
+
+        """
+        print('Strefa indekx: ', i, 'numer: ', (i+1))
+        print('Przed poprawka: ')
+        print('sin: ', sin_min, ' <-> ', sin_max)
+        print('cos: ', cos_min, ' <-> ', cos_max)
+        """
 
         helper_sin = sin_max
         helper_cos = cos_max
@@ -224,6 +243,11 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
             pass
         sin_max = helper_sin
         cos_max = helper_cos
+
+        """print('Po poprwace: ')
+        print('sin: ', sin_min, ' <-> ', sin_max)
+        print('cos: ', cos_min, ' <-> ', cos_max)"""
+
         del helper_sin, helper_cos
         helper_list = []
 
@@ -234,6 +258,10 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
 
                 if porownanie(elem[3], sin_min, sin_max) and porownanie(elem[4], cos_min, cos_max):
                     helper_list.append(elem[5])
+                    counter = counter + 1
+
+                    #licznik += 1
+                    #visited_points.append(elem)
                     # print(str(elem) + " OK")
                     pass
                 else:
@@ -241,12 +269,27 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
                     pass
 
         points_per_area.append(deepcopy(helper_list))
+
         del helper_list, sin_max, sin_min, cos_max, cos_min
+        number_of_points_per_area.append(counter)
+        counter = 0
     # Po tym forze, mamy podzial na strefy (rowny podzial kątowy)
+
+
+    """#print('Punkty na strefe:\n', points_per_area)
+    print('Licznik: ', licznik)
+    print('Ilosc: ', [len(elem) for elem in points_per_area])
+    print('Razem: ', sum([len(elem) for elem in points_per_area]))
+
+    #Pominieto:
+    print("Pominieto: ")
+    for point in point_info:
+        if point not in visited_points:
+            print(point)"""
 
     # Czas na sortowanie xD
     route = [base_index]
-    route_lists_in_list = [base_index]
+    route_lists_in_list = [[base_index]]
     for i in range(len(points_per_area)):
         """route_lists_in_list.append(sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index))
         route = route + sort_cost_matrix_only_for_indexes(cost_matrix, points_per_area[i], base_index)"""
@@ -261,10 +304,10 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     # Zamiana kolumn, wierszy wedlug wyznaczonej kolejnosci
     new_matrix = []
     # for i in range(0, len(cost_matrix)):
-    print('\nRaport funkcji: "sort_matrix_areas" - ilosc znalezionych punktow: ', len(route))
-    print('Punktow w macierzy jest: ', len(cost_matrix))
+    """print('\nRaport funkcji: "sort_matrix_areas" - ilosc znalezionych punktow: ', len(route))
+    print('Punktow w macierzy jest: ', len(cost_matrix))"""
 
-    for i in range(0, len(cost_matrix)-1):
+    for i in range(0, len(cost_matrix)):
         helperek = []
         for j in range(0, len(cost_matrix[i])):
             helperek.append(cost_matrix[route[i]][route[j]])
@@ -273,33 +316,37 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
         helperek.clear()
         pass
 
-
+    """print('wymiary cost_matrix', len(new_matrix))
     print('Funckja: "sort_matrix_areas", koszt trasy wyznaczonej przez te funkcje: ')
-    print('koszt nowej macierzy: ', cost(new_matrix), 'Koniec raportu\n')
+    print('koszt nowej macierzy: ', cost(new_matrix), 'Koniec raportu\n')"""
 
     if list_of_lists:
         return new_matrix, route_lists_in_list
-    return new_matrix, route
+    return new_matrix, route, number_of_points_per_area
 
 
 def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int = 1, max_val: int = 100,
                      min_val: int = -100):
     points = random_2dim_points(amount_of_points, max_val, min_val)  # Losowanko punktow
     cost_matrix = create_cost_matrix(points)  # stworzenie macierzy kosztow
+    ilosc_punktow_na_strefe = []
     if function_id == 1:
         cost_matrix, route = sort_matrix_by_distance(cost_matrix, 0)
     elif function_id == 2:
-        cost_matrix, route = sort_matrix_areas(cost_matrix, points, amount_trucks)
+        cost_matrix, route, ilosc_punktow_na_strefe = sort_matrix_areas(cost_matrix, points, amount_trucks)
 
     new_points = []
     # Sortowanie listy punktow (x, y)
     for numer_wierzcholka in route:
         new_points.append(points[numer_wierzcholka])
+
+    """
     print('\nRaport funkcji: "make_cost_matrix"')
     print('Stare punkty: ', points, '\nNowe punkty: ', new_points)
     print('\nilosc wylosowanych punktow: ', len(points), 'powinno ich byc: ', amount_of_points)
     print('ilosc punktow po sortowaniu: ', len(new_points))
+    """
 
     points = new_points
 
-    return cost_matrix, points
+    return cost_matrix, points, ilosc_punktow_na_strefe

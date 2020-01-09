@@ -19,9 +19,28 @@ bin_locations = [[inf, 3,   6,   8,  10,  15,  20, 21],
                  [21,  17, 11,   9,   7,   5,   5, inf]
                  ]
 
-bin_locations, bin_point_list = MatrixSegregation.make_cost_matrix(100, 6)  # 7 punktow, 3 smieciarki
+from random import seed, randint
 
+seed(1)
+min_rubbish = 1
+max_rubbish = 10
 
+liczba_lokacji = 2500
+liczba_smieciarek = 25
+
+bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(liczba_lokacji, liczba_smieciarek, function_id=2)  # 7 punktow, 3 smieciarki
+
+"""# Pokaz kolejnosc
+x = [elem[0] for elem in bin_point_list]
+y = [elem[1] for elem in bin_point_list]
+from matplotlib import pyplot as plt
+plt.plot(x, y)
+plt.show()"""
+
+rubbish_in_location = [0] + [randint(min_rubbish, max_rubbish) for i in range(liczba_lokacji-1)]
+print("Ilosc smieci w lokalizacjach: ", rubbish_in_location)
+trucks_volume = [1000] * liczba_smieciarek
+print("Pojemnosc smieciarek: ", trucks_volume)
 print("dane poczatkowe") # dane do testów
 #print( bin_locations, "\n",bin_point_list)
 """"
@@ -45,14 +64,23 @@ bin_point_list = [(0, 0), (-30, 11), (-2, -57), (-64, -70), (-68, -53), (65, -41
 print("dane poczatkowe")
 
 """
-rubbish_in_location = [0, 4, 3, 3, 5, 8, 10, 4,5,5 ,4,5,8,7,4,5,6,7,8,4]*5  # ilosc smieci od kazdego miasta
+#rubbish_in_location = [0, 4, 3, 3, 5, 8, 10, 4,5,5 ,4,5,8,7,4,5,6,7,8,4]*5  # ilosc smieci od kazdego miasta
                                                                                 # index 0 baza
-trucks_volume = [1000, 1000,1000] # pojemnosci
+#trucks_volume = [1000, 1000,1000] # pojemnosci
 # koniec danych wejsciowych
 
 #trucks_filled_volume = [0] * len(trucks_volume)
 trucks_returns = [0] * len(trucks_volume)
 
+
+def first_solution_areas(location: List, trucks: List, points_per_area: List):
+    _solution = [0] * len(trucks)  # przyjmuje globalne bin_location, garbage_trucks
+    number = 1
+    for i in range(len(points_per_area)):
+        _solution[i] = list(range(number, number+points_per_area[i]))
+        number = number+points_per_area[i]
+    print(_solution)
+    return _solution
 
 
 def first_solution(location: List, trucks: List) -> List:  # rozdziel po rowno
@@ -70,6 +98,7 @@ def first_solution(location: List, trucks: List) -> List:  # rozdziel po rowno
         _from = _to
     # print(solution)
     return solution
+
 
 def count_cost(solution: List):  # funkcja kosztu dla sollution
     cost = 0
@@ -90,7 +119,18 @@ def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej
         trucks_filled_volume[num_truck] += rubbish_in_location[locations[i]]  # zaladowanie smieci
         #print(trucks_filled_volume)
         if (i + 1 >= len(locations)):  # jesli ostatni
-            ride_cost += bin_locations[locations[i]][0]
+
+            try:
+                ride_cost += bin_locations[locations[i]][0]
+            except IndexError:
+                print('len(bin_location):', len(bin_locations))
+                print('len(locations):', len(locations))
+                print("Aktualne i=", i)
+                print('locations[i] ', locations[i])
+                print('locations ', locations)
+                print('bin_locations ', bin_locations)
+                print('bin_locations[locations[i]] ', bin_locations[locations[i]])
+                raise Exception
             return ride_cost
 
         #print("pojemnosc smieciarki", i,":", trucks_volume[num_truck])
@@ -111,7 +151,8 @@ def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej
 
 # rozwiazanie = first_solution(list(range(0,6)),list(range(0,3)))
 
-solution = first_solution(bin_locations, trucks_volume)
+solution = first_solution_areas(location=bin_locations, trucks=trucks_volume, points_per_area=ilosc_punktow_na_strefe)
+#solution = first_solution(bin_locations, trucks_volume)
 #print(solution)
 cost = count_cost(solution)
 #print(cost)
