@@ -4,97 +4,49 @@ import statistics
 from copy import deepcopy
 import MatrixSegregation
 import ShowSolutions
-
 from random import seed, randint
+import Raportowanie
+
+# inf = float('nan')
+inf = -1
+
+# lokacja 0 to baza
+# bin_locations - macierz kosztow
+# bin_point_list - lista wspolrzednych (x, y) punktow
+# ilosc_punktow_na_strefe - ile punktow jest w kazdej ze stref (podzial ukladu wspolrzednych na strefy wg kata)
+#
+# Liczba iteracji calego algorytmu
+iterations = 50 * 1000
+# Maksymalna ilosc iteracji bez polepszenia wartosci
+iterations_without_change_max_value = 257
 
 seed(1)
-min_rubbish = 1
-max_rubbish = 10
+min_rubbish = 1  # Minimalna ilosc smieci w lokalizacji
+max_rubbish = 10  # Maksymalna ilosc smieci w lokalizacji
 
-<<<<<<< HEAD
-liczba_lokacji = 100
-liczba_smieciarek = 4
+liczba_lokacji = 512
+liczba_smieciarek = 9
 
-bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(liczba_lokacji, liczba_smieciarek, function_id=2)  # 7 punktow, 3 smieciarki
+bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(
+    liczba_lokacji, liczba_smieciarek, function_id=2)
 
-=======
-from random import seed, randint
-
-seed(1)
-min_rubbish = 1
-max_rubbish = 10
-
-liczba_lokacji = 2500
-liczba_smieciarek = 25
-
-bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(liczba_lokacji, liczba_smieciarek, function_id=2)  # 7 punktow, 3 smieciarki
-
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
-"""# Pokaz kolejnosc
-x = [elem[0] for elem in bin_point_list]
-y = [elem[1] for elem in bin_point_list]
-from matplotlib import pyplot as plt
-plt.plot(x, y)
-plt.show()"""
 
 rubbish_in_location = [0] + [randint(min_rubbish, max_rubbish) for i in range(liczba_lokacji-1)]
-print("Ilosc smieci w lokalizacjach: ", rubbish_in_location)
 trucks_volume = [1000] * liczba_smieciarek
-print("Pojemnosc smieciarek: ", trucks_volume)
-<<<<<<< HEAD
-
-'''
-=======
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
-print("dane poczatkowe") # dane do testów
-#print( bin_locations, "\n",bin_point_list)
-
-bin_locations = [[-1, 31, 57, 94, 86, 76, 74, 91, 101, 128],
-[31, -1, 73, 87, 74, 108, 104, 104, 116, 158],
-[57, 73, -1, 63, 66, 68, 99, 142, 150, 100],
-[94, 87, 63, -1, 17, 132, 158, 185, 196, 158],
-[86, 74, 66, 17, -1, 133, 154, 175, 186, 164],
-[76, 108, 68, 132, 133, -1, 48, 115, 119, 55],
-[74, 104, 99, 158, 154, 48, -1, 70, 71, 97],
-[91, 104, 142, 185, 175, 115, 70, -1, 12, 167],
-[101, 116, 150, 196, 186, 119, 71, 12, -1, 169],
-[128, 158, 100, 158, 164, 55, 97, 167, 169, -1]]
-
-bin_point_list = [(0, 0), (-30, 11), (-2, -57), (-64, -70), (-68, -53), (65, -41), (74, 7), (53, 74), (65, 78), (93, -89)]
-print("dane poczatkowe")
-'''
-
-<<<<<<< HEAD
-#rubbish_in_location = [0, 4, 3, 3, 5, 8, 10, 4,5,5 ]*20  # ilosc smieci od kazdego miasta
-                                                                                # index 0 baza
-#trucks_volume = [100, 20,50]*4 # pojemnosci
-=======
-"""
-#rubbish_in_location = [0, 4, 3, 3, 5, 8, 10, 4,5,5 ,4,5,8,7,4,5,6,7,8,4]*5  # ilosc smieci od kazdego miasta
-                                                                                # index 0 baza
-#trucks_volume = [1000, 1000,1000] # pojemnosci
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
-# koniec danych wejsciowych
-
-#trucks_filled_volume = [0] * len(trucks_volume)
 trucks_returns = [0] * len(trucks_volume)
 
 
-<<<<<<< HEAD
-=======
-def first_solution_areas(location: List, trucks: List, points_per_area: List):
+def first_solution_areas(trucks: List, points_per_area: List):
     _solution = [0] * len(trucks)  # przyjmuje globalne bin_location, garbage_trucks
     number = 1
     for i in range(len(points_per_area)):
         _solution[i] = list(range(number, number+points_per_area[i]))
         number = number+points_per_area[i]
-    print(_solution)
     return _solution
 
 
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
 def first_solution(location: List, trucks: List) -> List:  # rozdziel po rowno
-    solution = [0] * len(trucks)  # przyjmuje globalne bin_location, garbage_trucks
+    _solution = [0] * len(trucks)  # przyjmuje globalne bin_location, garbage_trucks
     bins_amount = int((len(location) - 1) / len(trucks))  # zwraca poczatkowe solution
     rest = (len(location) - 1) % len(trucks)
     _from = 1
@@ -104,22 +56,20 @@ def first_solution(location: List, trucks: List) -> List:  # rozdziel po rowno
         if rest != 0:
             _to += 1
             rest -= 1
-        solution[i] = list(range(_from, _to))
+        _solution[i] = list(range(_from, _to))
         _from = _to
-    # print(solution)
-    return solution
-<<<<<<< HEAD
-=======
+    return _solution
 
 
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
-def count_cost(solution: List):  # funkcja kosztu dla sollution
-    cost = 0
-    for num_truck in range(0, len(solution)):
-        cost += truck_ride_cost(solution[num_truck], num_truck)
-        #print("koszt przejazdu", cost)
-    return cost
+def count_cost(_solution: List):  # funkcja kosztu dla sollution
+    _cost = 0
+    for num_truck in range(0, len(_solution)):
+        _cost += truck_ride_cost(_solution[num_truck], num_truck)
+    return _cost
+
+
 def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej śmieciarki
+    Raportowanie.used_function('truck_ride_cost')
     # print(locations)
     if locations == []:
         return 0
@@ -129,58 +79,33 @@ def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej
 
     for i in range(0, len(locations)):
         trucks_filled_volume[num_truck] += rubbish_in_location[locations[i]]  # zaladowanie smieci
-        #print(trucks_filled_volume)
-        if (i + 1 >= len(locations)):  # jesli ostatni
-<<<<<<< HEAD
-            #ride_cost += bin_locations[locations[i]][0]
-=======
 
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
-            try:
-                ride_cost += bin_locations[locations[i]][0]
-            except IndexError:
-                print('len(bin_location):', len(bin_locations))
-                print('len(locations):', len(locations))
-                print("Aktualne i=", i)
-                print('locations[i] ', locations[i])
-                print('locations ', locations)
-                print('bin_locations ', bin_locations)
-                print('bin_locations[locations[i]] ', bin_locations[locations[i]])
-                raise Exception
-<<<<<<< HEAD
-
-=======
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
+        if i + 1 >= len(locations):  # jesli ostatni
+            ride_cost += bin_locations[locations[i]][0]
             return ride_cost
 
-        #print("pojemnosc smieciarki", i,":", trucks_volume[num_truck])
-        #print("pojemnosc zajeta smieciarki", i,":", trucks_filled_volume[num_truck])
-        #print("ilosc smieci w nastepnej lokacji",rubbish_in_location[locations[i+1]])
-
-        if (trucks_volume[num_truck] < trucks_filled_volume[num_truck] + rubbish_in_location[locations[i+1]]):  # wroc do bazy jesli smieciarka pelna
+        if trucks_volume[num_truck] < trucks_filled_volume[num_truck] + rubbish_in_location[locations[i+1]]:  # wroc do bazy jesli smieciarka pelna
             ride_cost += bin_locations[locations[i]][0]
             trucks_filled_volume[num_truck] = 0
             ride_cost += bin_locations[0][locations[i + 1]]
             trucks_returns[num_truck] = trucks_returns[num_truck] + 1
-            #print("powrot")
 
         else:
             ride_cost += bin_locations[locations[i]][locations[i + 1]]
 
     return ride_cost
 
-# rozwiazanie = first_solution(list(range(0,6)),list(range(0,3)))
 
-solution = first_solution_areas(location=bin_locations, trucks=trucks_volume, points_per_area=ilosc_punktow_na_strefe)
-#solution = first_solution(bin_locations, trucks_volume)
-#print(solution)
+solution = first_solution_areas(trucks=trucks_volume, points_per_area=ilosc_punktow_na_strefe)
+ShowSolutions.show_routes(solution, bin_point_list, arrow=True, separate_plots=False)
+
+# solution = first_solution(bin_locations, trucks_volume)
 cost = count_cost(solution)
-#print(cost)
+print('Koszt pierwszego rozwiazania = ', cost)
 
-#### END OF PART TWO ####
+# ### END OF PART TWO ####
 
-
-#### PART THREE ####
+# ### PART THREE ####
 '''######LISTA TABU#########
 # {typ_zabronienia1:[ konkretne zabronienia ], typ_zabronienia2: [ konkretne zabronienia ] itd.
 # typ1 (i,n)zakaz zmiany i tego kosza na n iteracji
@@ -188,23 +113,31 @@ cost = count_cost(solution)
 # typ3 (i,j,n) i-ty kosz nie w j-tej smieciarce przez n kadencji
 #...
 '''
-#TABU = {1: [[1, 10], [3, 2], [4, 5]], 2: [[1, 2, 3], [3, 5, 6]], 3: [[3,0,10], [2,1,15],[5,2,12]]}
-TABU = {1:[], 2:[],3:[]}
+
+TABU = {1: [], 2: [],3: []}
 
 
-def add_to_TABU(TABU: Dict, new_TABU: List,type: int) -> Dict:  # jako argument ogonie TABU, nowe pojedyncze zabronienie i jego typ(patrz komentarz wyzej)
-    #mozna zaimplementować blokowanie dopisywania tych samych list
-    TABU[type].append(new_TABU)
+def add_to_TABU(TABU: Dict, new_TABU: List, _type: int) -> Dict:
+    # jako argument ogonie TABU, nowe pojedyncze zabronienie i jego typ(patrz komentarz wyzej)
+    # mozna zaimplementować blokowanie dopisywania tych samych list
+    TABU[_type].append(new_TABU)
     return TABU
-def print_TABU(TABU: Dict):
-    for type in TABU:
-        print(type, '->', TABU[type])
 
-''' Funkcje zmieniajace rozwiazanie:
+
+def print_TABU(TABU: Dict):
+    for _type in TABU:
+        print(_type, '->', TABU[_type])
+
+
+''' 
+    Funkcje zmieniajace rozwiazanie:
     ch - change + w jaki sposob
 #1)
 '''
+
+
 def ch_returns(solution: List) -> List:
+    Raportowanie.used_function('ch_returns')
     new_solution = deepcopy(solution)
     truck_max = trucks_returns.index(max(trucks_returns))  # zwraca ktora smieciarka wykonala najwiecej powrotow
     truck_min = trucks_returns.index(min(trucks_returns))  # zwraca ktora smieciarka wykonala najmniej powrotow
@@ -221,7 +154,10 @@ def ch_returns(solution: List) -> List:
     if (aspiration(solution,new_solution)): #jesli aspiracja zadziala
         return new_solution
     return solution
+
+
 def ch_swap(solution: List) -> List:
+    Raportowanie.used_function('ch_swap')
     new_solution = deepcopy(solution)
     for route in new_solution:
         if(len(route)>=2):
@@ -235,7 +171,10 @@ def ch_swap(solution: List) -> List:
     if (aspiration(solution,new_solution)): #jesli aspiracja zadziala
         return new_solution
     return solution
+
+
 def ch_truck(solution: List) -> List:   #zamien smieciarki jesli ta o mniejszej pojemnosci wykonala wiecej powrotow
+    Raportowanie.used_function('ch_truck')
     new_solution = deepcopy(solution)
     truck_max = trucks_returns.index(max(trucks_returns))   # zwraca ktora smieciarka wykonala najwiecej powrotow
     truck_min = trucks_returns.index(min(trucks_returns))    # zwraca ktora smieciarka wykonala najmniej powrotow
@@ -248,11 +187,15 @@ def ch_truck(solution: List) -> List:   #zamien smieciarki jesli ta o mniejszej 
     if (aspiration(solution,new_solution)): #jesli aspiracja zadziala
         return new_solution
     return solution
+
+
 def ch_bins(solution: List) -> List:
+    Raportowanie.used_function('ch_bins')
     new_solution = deepcopy(solution)
     random_bin = random.randint(1, len(bin_locations)-1)
-    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0] # bin_pos ->[ktora smieciarka, ktory kosz z kolei] - indexy elementu w macierzy
-    #print("binpos",bin_pos)
+    bin_pos = [(index, row.index(random_bin)) for index, row in enumerate(new_solution) if random_bin in row][0]
+    # bin_pos ->[ktora smieciarka, ktory kosz z kolei] - indexy elementu w macierzy
+    # print("binpos",bin_pos)
 
     del(new_solution[bin_pos[0]][bin_pos[1]])
     random_truck = random.randint(0,len(new_solution)-1)
@@ -264,15 +207,18 @@ def ch_bins(solution: List) -> List:
         if check_ban_t2(new_solution) and check_ban_t3(new_solution):
             return new_solution
 
-    if (aspiration(solution,new_solution)): #jesli aspiracja zadziala
+    if aspiration(solution,new_solution): # jesli aspiracja zadziala
         return new_solution
     return solution
-def ch_del_max(solution: List): # usun najdalszy przejazd jaki wystepuje w rozwiazaniu
-    new_solution = deepcopy(solution)
-    max_p2p_for_truck = [] #maksymalny przejazd dla kazdej smieciarki
-    max_p2p_for_truck_value = [] #i jego wartość
-    for route in solution:
-        #print("route: ", route)
+
+
+def ch_del_max(_solution: List):  # usun najdalszy przejazd jaki wystepuje w rozwiazaniu
+    Raportowanie.used_function('ch_del_max')
+    new_solution = deepcopy(_solution)
+    max_p2p_for_truck = [] # maksymalny przejazd dla kazdej smieciarki
+    max_p2p_for_truck_value = [] # i jego wartość
+    for route in _solution:
+        # print("route: ", route)
         if len(route) > 2:
             p2p_values = []
             for i in range( len(route) - 1):
@@ -290,9 +236,9 @@ def ch_del_max(solution: List): # usun najdalszy przejazd jaki wystepuje w rozwi
 
     index_of_max = max_p2p_for_truck_value.index(max(max_p2p_for_truck_value)) #zwroci index najdluzszego przejazdu
     [od, do] = max_p2p_for_truck[index_of_max]
-    #print(od,do)
+    # print(od,do)
 
-    #przenies losowy kosz z wybranej pary [od do] do innej losowej smieciarki
+    # przenies losowy kosz z wybranej pary [od do] do innej losowej smieciarki
     if random.randint(0, 1):
         random_bin = od
     else:
@@ -310,21 +256,25 @@ def ch_del_max(solution: List): # usun najdalszy przejazd jaki wystepuje w rozwi
         if check_ban_t2(new_solution) and check_ban_t3(new_solution):
             return new_solution
 
-    if aspiration(solution,new_solution): #jesli aspiracja zadziala
+    if aspiration(_solution,new_solution): #jesli aspiracja zadziala
         return new_solution
     return new_solution
+# tabu_iteration = 10 pozostalosp po ban_max2
+# add_to_TABU(TABU, [od, do, tabu_iteration], 2)
 
-def ch_move_tail(solution: List): # usun najdalszy przejazd jaki wystepuje w rozwiazaniu
-    new_solution = deepcopy(solution)
-    max_p2p_for_truck = [] #maksymalny przejazd dla kazdej smieciarki
-    max_p2p_for_truck_value = [] #i jego wartość
-    for route in solution:
-        #print("route: ", route)
+
+def ch_move_tail(_solution: List):  # usun najdalszy przejazd jaki wystepuje w rozwiazaniu
+    Raportowanie.used_function('ch_move_tail')
+    new_solution = deepcopy(_solution)
+    max_p2p_for_truck = []  # maksymalny przejazd dla kazdej smieciarki
+    max_p2p_for_truck_value = []  # i jego wartość
+    for route in _solution:
+        # print("route: ", route)
         if len(route) > 2:
             p2p_values = []
             for i in range( len(route) - 1):
                 p2p_values.append(bin_locations[route[i]][route[i + 1]])
-            #print(p2p_values)
+            # print(p2p_values)
 
             od = route[p2p_values.index(max(p2p_values))]
             do = route[p2p_values.index(max(p2p_values)) + 1]
@@ -335,22 +285,22 @@ def ch_move_tail(solution: List): # usun najdalszy przejazd jaki wystepuje w roz
             max_p2p_for_truck.append([route[0], route[1]])
             max_p2p_for_truck_value.append(bin_locations[route[0]][route[1]])
 
-    index_of_max = max_p2p_for_truck_value.index(max(max_p2p_for_truck_value)) #zwroci index najdluzszego przejazdu
+    index_of_max = max_p2p_for_truck_value.index(max(max_p2p_for_truck_value))  # zwroci index najdluzszego przejazdu
     [od, do] = max_p2p_for_truck[index_of_max]
-    print("od , do", od, do)
+    # print("od , do", od, do)
 
-    #przenies koniec trasy do najblizszej smieciarki
+    # przenies koniec trasy do najblizszej smieciarki
     for i in range(len(new_solution)):
         if od in new_solution[i]:
-            #print("solution[",i,"]",new_solution[i])
+            # print("solution[",i,"]",new_solution[i])
             bin_start_index = new_solution[i].index(do)
 
             tail = new_solution[i][bin_start_index:]
-            #head = new_solution[i][bin_start_index:]
-            #print("tail", tail)
+            # head = new_solution[i][bin_start_index:]
+            # print("tail", tail)
             first_point = do
             end_point = tail[-1]
-            #znajdz najblizszy punkt do first_point
+            # znajdz najblizszy punkt do first_point
 
             distances_from_first_point = bin_locations[do]
             distances_from_end_point = bin_locations[end_point]
@@ -376,7 +326,7 @@ def ch_move_tail(solution: List): # usun najdalszy przejazd jaki wystepuje w roz
             del new_bins_distances_from_first_point[0]
             del new_bins_distances_from_end_point[0]
 
-            #znajdz min odleglosc
+            # znajdz min odleglosc
             min_from_end_point = min(new_bins_distances_from_first_point.items(), key=lambda x: x[1])
             min_from_first_point = min(new_bins_distances_from_end_point.items(), key=lambda x: x[1])
 
@@ -390,44 +340,50 @@ def ch_move_tail(solution: List): # usun najdalszy przejazd jaki wystepuje w roz
             bin_pos = [(index, row.index(closest_bin)) for index, row in enumerate(new_solution) if closest_bin in row][0] # bin_pos ->[ktora smieciarka, ktory   kosz z kolei]
             new_truck = bin_pos[0]
             new_solution[new_truck] += deepcopy(tail)
-    #sprawdz zabronienia
-    #if check_ban_t1(random_bin):
+    # sprawdz zabronienia
+    # if check_ban_t1(random_bin):
     if check_ban_t2(new_solution) and check_ban_t3(new_solution):
         return new_solution
 
-    if aspiration(solution,new_solution): #jesli aspiracja zadziala
+    if aspiration(_solution, new_solution):  # jesli aspiracja zadziala
         return new_solution
     return new_solution
-def ch_connect_close(solution: List):
-    new_solution = deepcopy(solution)
+
+
+def ch_connect_close(_solution: List):
+    Raportowanie.used_function('ch_connect_close')
+    new_solution = deepcopy(_solution)
     random_truck = random.randint(0, len(new_solution))
 
-    random_bin_index = random.randint(0, len(solution[random_truck]))
+    random_bin_index = random.randint(0, len(_solution[random_truck]))
     random_bin = new_solution[random_bin_index]
 
-    #znajdz najblizszy
+    # znajdz najblizszy
     bins_distances_from_point = {}
-    for bin_nr in solution[random_truck]:
+    for bin_nr in _solution[random_truck]:
         bins_distances_from_point[bin_nr] = bin_locations[random_bin][bin_nr]
 
     del bins_distances_from_point[random_bin]
 
-    min_from_point = min(bins_distances_from_point.items(), key = lambda x: x[1])
+    min_from_point = min(bins_distances_from_point.items(), key=lambda x: x[1])
     closest_bin = min_from_point[0]
 
     new_index = random_bin_index + 1
-    old_index = solution[random_truck].index(5)
+    old_index = _solution[random_truck].index(5)
 
     new_solution[random_truck].insert(random_bin_index+1 , new_solution[random_truck].pop(old_index))
-    #list1.insert(new_index, list1.pop(old_index))
+    # list1.insert(new_index, list1.pop(old_index))
 
-    ''' Funkcjie zabraniajace:
+
+''' Funkcjie zabraniajace:
     ban - zabron rozwiazaie
 1) policz max przejazd dla smieciarki i zabron go
 '''
 
-def ban_max(solution: List): # zabron najdluższe przejazdy dla kazdej ze smieciarek
-    for route in solution:
+
+def ban_max(_solution: List):  # zabron najdluższe przejazdy dla kazdej ze smieciarek
+    Raportowanie.used_function('ban_max')
+    for route in _solution:
         if len(route) > 2:
             p2p_values = []
             for i in range(len(route) - 1):
@@ -444,30 +400,40 @@ def ban_max(solution: List): # zabron najdluższe przejazdy dla kazdej ze smieci
             add_to_TABU(TABU, [od, do, tabu_iteration], 2)  # zabron
 
     # zapisc nie do tabu tylko zrobić liste i zrobic max dla calosci
-def ban_min(solution: List):# zabron zmeniac najkrotszych odcinkow
-    for route in solution:
-        if (len(route) > 2):
+
+
+def ban_min(_solution: List):  # zabron zmeniac najkrotszych odcinkow
+    Raportowanie.used_function('ban_min')
+    for route in _solution:
+        if len(route) > 2:
             p2p_values = []
             for i in range(len(route) - 1):
                 p2p_values.append(bin_locations[route[i]][route[i + 1]])
-            #print(p2p_values)
+            # print(p2p_values)
 
             od = route[p2p_values.index(min(p2p_values))]
             do = route[p2p_values.index(min(p2p_values)) + 1]
-            #print(od, do)
-            #print(p2p_values.index(max(p2p_values)))
+            # print(od, do)
+            # print(p2p_values.index(max(p2p_values)))
             tabu_iteration = 100
             add_to_TABU(TABU, [od, tabu_iteration], 1)  # zabron
             add_to_TABU(TABU, [do, tabu_iteration], 1)  # zabron
-def ban_max3(solution: List):
+
+
+def ban_max3(_solution: List):
+    Raportowanie.used_function('ban_max3')
+    # TODO Brak kodu
     print(max(solution))
 
 
 '''Sprawdz czy nie zabronione
     dla danego rozwiazania, sprawdz czy TABU nie zabrania
 '''
+
+
 #jesli funkcja chce zmienic i ty kosz to zwroc False
-def check_ban_t1(point:int)-> bool:
+def check_ban_t1(point: int) -> bool:
+    Raportowanie.used_function('check_ban_t1')
     if TABU[1] == []:
         return True
     banned_points = []
@@ -477,107 +443,120 @@ def check_ban_t1(point:int)-> bool:
         return False
     else:
         return True
-#jesli w nowym rozwiazaniu kosze z Tabu sa obok siebie zroci False
+
+
+# jesli w nowym rozwiazaniu kosze z Tabu sa obok siebie zroci False
 def check_ban_t2(solution: List) -> bool:
+    Raportowanie.used_function('check_ban_t2')
     if TABU[2] == []:
         return True
     for triple in TABU[2]:
         pos_point1 = [(index, row.index(triple[0])) for index, row in enumerate(solution) if triple[0] in row]
         pos_point2 = [(index, row.index(triple[1])) for index, row in enumerate(solution) if triple[1] in row]
 
-        #print(pos_point1[0], pos_point2[0])
-        if pos_point1[0][0] == pos_point2[0][0]: #jesli w tej samej śmieciarce
-            if abs(pos_point1[0][1] - pos_point2[0][1]) == 1: #jeśli sa obok siebie
+        # print(pos_point1[0], pos_point2[0])
+        if pos_point1[0][0] == pos_point2[0][0]:  # jesli w tej samej śmieciarce
+            if abs(pos_point1[0][1] - pos_point2[0][1]) == 1: # jeśli sa obok siebie
                 return False
     return True
-#jesli w nowym rozwiazaniu kosz jesz w zabronionej smieciarce zwroc False
+
+
+# jesli w nowym rozwiazaniu kosz jesz w zabronionej smieciarce zwroc False
 def check_ban_t3(solution: List) -> bool:
+    Raportowanie.used_function('check_ban_t3')
     if TABU[3] == []:
         return True
     for triple in TABU[3]:
         pos_point = [(index, row.index(triple[0])) for index, row in enumerate(solution) if triple[0] in row]
-        if pos_point[0][0] == triple[1]:    #czy kosz jest w zabronionej smieciarce
+        if pos_point[0][0] == triple[1]:  # czy kosz jest w zabronionej smieciarce
             return False
     return True
 
-#### END OF PART THREE ####
 
-print("tu")
+# ### END OF PART THREE ####
 
-print(solution)
-ShowSolutions.show_routes(solution, bin_point_list)
-#solution=ch_connect_close(solution)
+print('Tabu -> ', TABU)
+print('Solution -> ', solution)
+print('Koszt rozwiazania -> ', count_cost(solution))
+print('Aktualna iteracja -> ', Raportowanie.counter)
+print('koszty')
 
-print(solution)
-ShowSolutions.show_routes(solution, bin_point_list)
+ban_min(solution)
+print('Tabu po wywolaniu "ban_min(solution)"-> ', TABU)
 
-
-#ch_del_max(solution)
+# ch_del_max(solution)
 print('TYLE')
 
-#### PART FOUR ####
-#Memories
+# ### PART FOUR ####
+# Memories
 
-medium_term_memory = {} #lista najlepszych rozwiązan
+medium_term_memory = {} # lista najlepszych rozwiązan
 iterations_without_change = 0
 
-#Aspiration
-def aspiration(solution:List, new_solution:List):# zwroci TRUE jesli aspiracja ma zadzialac
-    for j in range(0,len(solution)) :
-        if( truck_ride_cost(solution[j],j) < truck_ride_cost(new_solution[j],j) ):
+
+# Aspiration
+def aspiration(solution:List, new_solution:List):  # zwroci TRUE jesli aspiracja ma zadzialac
+    for j in range(0,len(solution)):
+        if truck_ride_cost(solution[j],j) < truck_ride_cost(new_solution[j],j):
             return True
     return False
-####END OF PART FOUR ####
 
 
-#### TABU SEARCH ####
+# ###END OF PART FOUR ####
 
-x0 = deepcopy(solution) # x0 <=> solution
+
+# ### TABU SEARCH ####
+
+x0 = deepcopy(solution)  # x0 <=> solution
 x_opt = deepcopy(solution)
 
 solution_change = True  # Po to aby pokazac pierwsza opcje
-ShowSolutions.show_routes(x_opt, bin_point_list)
+# ShowSolutions.show_routes(x_opt, bin_point_list)
 
 print("START")
 print("First solution >", solution, count_cost(solution))
-iterations = 10000
+# iterations = WARTOSC ^^^^ Na Gorze pliku
 for i in range(0, iterations):
+    Raportowanie.counter += 1
+    if i % 1000 == 0:
+        pass
+        # print(i)
+
     '''zmien rozwiazanie'''
     x0 = deepcopy(x_opt)
     change_probability = random.randint(1, 100)
 
-    if i <  iterations*3/4:
-        if change_probability in range(1,40):
+    if i < iterations * 3 / 4:
+        if change_probability in range(1, 40):
             x0 = ch_move_tail(x0)
 
-    #if(change_probability in range(1,60)):
-       # print('1')
-       #x0 = ch_returns(x0)
+    # if(change_probability in range(1,60)):
+    # print('1')
+    # x0 = ch_returns(x0)
     if change_probability in range(1, 20):
-       # print('2')
+        # print('2')
         x0 = ch_swap(x0)
     if change_probability in range(50, 60):
-       # print('3')
+        # print('3')
         x0 = ch_truck(x0)
     if change_probability in range(40, 80):
-       # print('4')
+        # print('4')
         x0 = ch_bins(x0)
-    if change_probability in range(1,60):
+    if change_probability in range(1,100):
         x0 = ch_del_max(x0)
+    # x = deepcopy(x0)
 
-
-
-    #x = deepcopy(x0)
-
-    #print(x, " -> ", count_cost(x))
+    # print(x, " -> ", count_cost(x))
 
     cost_x0 = count_cost(x0)
-    #print("nowy koszt: ",cost_x0)
-    #ShowSolutions.show_routes(x0, bin_point_list)
+    # print("nowy koszt: ",cost_x0)
+    # ShowSolutions.show_routes(x0, bin_point_list)
     cost_x_opt = count_cost(x_opt)
+
+
     if cost_x0 < cost_x_opt:
-       # print("xopt",x_opt, " --> ", cost_x_opt)
-        #print("x0", x0, " --> ", cost_x0)
+        # print("xopt",x_opt, " --> ", cost_x_opt)
+        # print("x0", x0, " --> ", cost_x0)
 
         x_opt = deepcopy(x0)
 
@@ -608,32 +587,53 @@ for i in range(0, iterations):
         pass
 
     '''Pamiec srednioterminowa i kryterium aspiracji'''
-    if iterations_without_change >= 5000:
+    if iterations_without_change >= iterations_without_change_max_value:
         medium_term_memory[count_cost(x_opt)] = x_opt
 
         iterations_without_change = 0
-        x_opt = deepcopy(solution)  # dywersyfikacja jeśli sie nie poprawi przez n iteracji to wez nowe (gorsze)rozwiazanie
-                                    # obecnie- wroc do poczatku
+        liczba_opcji = 2  # Ile mamy sposobow na wyjscie z minimum lokalnego
+        if i % liczba_opcji == 0:
+            x_opt = deepcopy(x0)  # Bierzemy rozwiaznie, ktore akurat sie pojawilo
+        elif i % liczba_opcji == 1:
+            x_opt = deepcopy(solution)  # Rozwiazanie z poczatku
+
+        # dywersyfikacja jeśli sie nie poprawi przez n iteracji to wez nowe (gorsze)rozwiazanie
+        # obecnie- wroc do poczatku
 
     '''przedstawianie wyniku'''
     if solution_change:
-        #ShowSolutions.show_routes(x_opt, bin_point_list)
+        # ShowSolutions.show_routes(x_opt, bin_point_list)
         solution_change = False
 
+    # Dodanie do raportu aktualnie liczone rozwiazania
+    Raportowanie.used_function(Raportowanie.klucz_slowny_optymalnego_kosztu_rozwiazania, cost_x_opt)
+    # Raportowanie.used_function(Raportowanie.klucz_slowny_kosztu_rozwiazania, cost_x0)
 
-[print(sol, medium_term_memory[sol]) for sol in medium_term_memory.keys()]
+
 if medium_term_memory:
     min_road = min(medium_term_memory.keys())
     x_opt = deepcopy(medium_term_memory[min_road])
 
+
 print("Wynik:")
+print("medium_term_memory :\n")
+[print(sol, medium_term_memory[sol]) for sol in medium_term_memory.keys()]
+
+print("iterations_without_change ->", iterations_without_change)
+print("x_opt ->", x_opt, "\n count_cost(x_opt) ->", count_cost(x_opt))
+
+print('Wyswietlono wykres ostatecznego rozwiazania.')
+ShowSolutions.show_routes(x_opt, bin_point_list)
 
 
-print(medium_term_memory)
-print(iterations_without_change)
-print(x_opt, count_cost(x_opt))
+Raportowanie.show_raport()
+Raportowanie.show_solution_cost(Raportowanie.klucz_slowny_kosztu_rozwiazania,
+                                plot_title='Koszt rozwiazania w danej iteracji')
+Raportowanie.show_solution_cost(Raportowanie.klucz_slowny_optymalnego_kosztu_rozwiazania,
+                                plot_title='Koszt optymalnego rozwiazania w danej iteracji')
 
 ShowSolutions.show_routes(x_opt, bin_point_list)
+
 '''
 #srednoirweminowa sprawdz rozwiazania zanim zapiszesz do pamieci
 #rozwiazania podobne nie zapisujemy na liscie

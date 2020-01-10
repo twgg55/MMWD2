@@ -198,7 +198,9 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     Nie moge tego ominac, poniewaz musze miec zgodne indeksy w point info jak i w cost_matrix oraz points_list
     ALE
     bede pamietal o tym, aby zawsze pomijac punkt bazy w point_info (Bo jaki jest kat miedzy punktem, a soba)
+
     Punktem odniesienia do wyliczania katow nie jest punkt (0, 0), a jest nim punkt BAZY, nie wazne gdzie jest
+
     """
     # Lista list:
     # Kazda strefa (smieciarka) ma przypisane do siebie punkty
@@ -278,10 +280,7 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
     print('Licznik: ', licznik)
     print('Ilosc: ', [len(elem) for elem in points_per_area])
     print('Razem: ', sum([len(elem) for elem in points_per_area]))
-<<<<<<< HEAD
-=======
 
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
     #Pominieto:
     print("Pominieto: ")
     for point in point_info:
@@ -350,8 +349,4 @@ def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int
 
     points = new_points
 
-<<<<<<< HEAD
     return cost_matrix, points, ilosc_punktow_na_strefe
-=======
-    return cost_matrix, points, ilosc_punktow_na_strefe
->>>>>>> c794d0480fbbca69f48865a10046cf5619bc9422
