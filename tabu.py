@@ -16,7 +16,7 @@ inf = -1
 # ilosc_punktow_na_strefe - ile punktow jest w kazdej ze stref (podzial ukladu wspolrzednych na strefy wg kata)
 #
 # Liczba iteracji calego algorytmu
-iterations = 50 * 1000
+iterations = 10 * 1000
 # Maksymalna ilosc iteracji bez polepszenia wartosci
 iterations_without_change_max_value = 257
 
@@ -24,15 +24,16 @@ seed(1)
 min_rubbish = 1  # Minimalna ilosc smieci w lokalizacji
 max_rubbish = 10  # Maksymalna ilosc smieci w lokalizacji
 
-liczba_lokacji = 512
-liczba_smieciarek = 9
+liczba_lokacji = 250
+liczba_smieciarek = 4
 
 bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(
     liczba_lokacji, liczba_smieciarek, function_id=2)
 
 
 rubbish_in_location = [0] + [randint(min_rubbish, max_rubbish) for i in range(liczba_lokacji-1)]
-trucks_volume = [1000] * liczba_smieciarek
+# trucks_volume = [1000] * liczba_smieciarek
+trucks_volume = [10*randint(20, 80) for i in range(liczba_smieciarek)]
 trucks_returns = [0] * len(trucks_volume)
 
 
@@ -633,6 +634,16 @@ Raportowanie.show_solution_cost(Raportowanie.klucz_slowny_optymalnego_kosztu_roz
                                 plot_title='Koszt optymalnego rozwiazania w danej iteracji')
 
 ShowSolutions.show_routes(x_opt, bin_point_list)
+
+Raportowanie.real_route_from_solution(
+    _solution=x_opt,
+    cost_matrix=bin_locations,
+    rubbish_in_location=rubbish_in_location,
+    trucks_max_volumes=trucks_volume,
+    xy_points=bin_point_list
+)
+
+
 
 '''
 #srednoirweminowa sprawdz rozwiazania zanim zapiszesz do pamieci

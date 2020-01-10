@@ -7,6 +7,11 @@ inf = -1  # TODO Rozwiazac ewentualne problemy z tym!
 
 
 def print_matrix(matrix: List[List]):
+    """
+
+    :param matrix: Macierz, ktora chcemy wyswietlic
+    :return:
+    """
     string = ""
     for i in range(0, len(matrix)):
         string = string + '|'
@@ -19,6 +24,11 @@ def print_matrix(matrix: List[List]):
 
 
 def cost(matrix: List[List]) -> int:
+    """
+
+    :param matrix: Macierz, dla ktorej liczymy koszt
+    :return:
+    """
     # Tak ogolnie to jest to suma wyrazow nad przekatna
     _sum = 0  # suma odleglosci miedzy punktami
     for i in range(0, len(matrix) - 1):
@@ -27,6 +37,12 @@ def cost(matrix: List[List]) -> int:
 
 
 def sort_matrix_by_distance(matrix: List[List], start_index: int = None):
+    """
+
+    :param matrix: Macierz, ktora sortujemy
+    :param start_index: od jakiego indeksu zaczac, podawac index bazy
+    :return:
+    """
     if start_index is None:
         _from = len(matrix) - 1
         _to = 0
@@ -89,6 +105,13 @@ def sort_matrix_by_distance(matrix: List[List], start_index: int = None):
 
 # Generowanie losowych punktow na plaszczyznie (2 wymiary)
 def random_2dim_points(quantity: int, max_value: int = 100, min_value: int = 0) -> List:
+    """
+
+    :param quantity: ilosc punktow do wylosowania
+    :param max_value: maksymalna wartosc wylosowanej wspolrzednej (x oraz y)
+    :param min_value: minimalna wartosc wylosowanej wspolrzednej (x oraz y)
+    :return:
+    """
     _2D_points_list = [
         (0, 0)]  # BAZA ma zawsze wspolrzedne 0,0. CZEMU? Bo wysypisko jest zawsze POZA miastem, a nie w centrum xD
     while len(_2D_points_list) < quantity:
@@ -102,6 +125,11 @@ def random_2dim_points(quantity: int, max_value: int = 100, min_value: int = 0) 
 
 
 def create_cost_matrix(points_list: List):
+    """
+
+    :param points_list: lista punktow (x, y) dla ktorych tworzymy macierz kosztow
+    :return:
+    """
     cost_matrix = []
     for row in range(len(points_list)):
         list_helper = [0 for i in range(len(points_list))]
@@ -126,6 +154,12 @@ def create_cost_matrix(points_list: List):
 
 
 def sort_points_list(list_to_sort: List, given_order: List) -> List:
+    """
+
+    :param list_to_sort: lista elementow do posortowania
+    :param given_order: lista indeksow, ktora jest kolejnoscia
+    :return:
+    """
     if len(list_to_sort) != len(given_order):
         print("Kierowniku, listy maja rozne rozmiary. -> sort_points_list")
         Exception("Kierowniku, listy maja rozne rozmiary. -> sort_points_list")
@@ -134,6 +168,13 @@ def sort_points_list(list_to_sort: List, given_order: List) -> List:
 
 
 def sort_cost_matrix_only_for_indexes(cost_matrix: List, index_list_to_visit: List, start_point_index: int) -> List:
+    """
+
+    :param cost_matrix:
+    :param index_list_to_visit:
+    :param start_point_index:
+    :return:
+    """
     _visited = [start_point_index]
     wyrownanie = 0 if start_point_index in index_list_to_visit else 1
     # len(index_list_to_visit) + wyrownanie  --> Sprawdzenie, czy nalezy wydluzyc poszukiwania w zaleznosci od tego,
@@ -169,10 +210,16 @@ def sort_cost_matrix_only_for_indexes(cost_matrix: List, index_list_to_visit: Li
 
 def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, _x_base: int = 0, _y_base: int = 0,
                       list_of_lists: bool = False):
-    ###
-    # list_of_lists - zwracana lista ma byc lista list (dla kazdej smieciarki) czy lista pojedynczych elementow (ciag punktow)
-    ###
-    #print("Otrzymano: ", len(points_list), ' punktow.')
+    """
+
+    :param cost_matrix:
+    :param points_list:
+    :param amount_trucks:
+    :param _x_base:
+    :param _y_base:
+    :param list_of_lists:
+    :return:
+    """
 
     if amount_trucks < 4:
         Exception('Funckja: "sort_matrix_areas"\nMinimalna liczba smieciarek to 4. Wprowadzono ', amount_trucks, ' smieciarek!\n')
@@ -327,6 +374,15 @@ def sort_matrix_areas(cost_matrix: List, points_list: List, amount_trucks: int, 
 
 def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int = 1, max_val: int = 100,
                      min_val: int = -100):
+    """
+
+    :param amount_of_points:
+    :param amount_trucks:
+    :param function_id:
+    :param max_val:
+    :param min_val:
+    :return:
+    """
     points = random_2dim_points(amount_of_points, max_val, min_val)  # Losowanko punktow
     cost_matrix = create_cost_matrix(points)  # stworzenie macierzy kosztow
     ilosc_punktow_na_strefe = []
@@ -339,13 +395,6 @@ def make_cost_matrix(amount_of_points: int, amount_trucks: int, function_id: int
     # Sortowanie listy punktow (x, y)
     for numer_wierzcholka in route:
         new_points.append(points[numer_wierzcholka])
-
-    """
-    print('\nRaport funkcji: "make_cost_matrix"')
-    print('Stare punkty: ', points, '\nNowe punkty: ', new_points)
-    print('\nilosc wylosowanych punktow: ', len(points), 'powinno ich byc: ', amount_of_points)
-    print('ilosc punktow po sortowaniu: ', len(new_points))
-    """
 
     points = new_points
 

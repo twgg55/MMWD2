@@ -4,19 +4,23 @@ import matplotlib.pyplot as plt
 
 
 def show_routes(routes_lists: List, xy_points: List, colours: List[str] = None, arrow: bool = True,
-                point_marker: str = None, point_color: str = None, separate_plots: bool = False) -> None:
-    ###
-    # routes_lists - rozwiązanie zadania. Lista list (tras śmieciarek) -> to powinny być indeksy punktow w liscie :)
-    # xy_points - wylosowane punkty (Wspolrzedne XY) jako krotki w liscie
-    # colours - lista kolejnych kolorow (jezeli chcemy, żeby była narzucona)
-    # arrow - Czy rysowac strzalki? Jesli nie zostana zwykle linie
-    # point_marker - jakim symbolem maja byc zaznaczane punkty
-    # point_color - kolor punktu
-    # separate_plots - Czy chcemy mieć osobne wykresy dla każdej śmieciarki?
-    #
-    ###
+                point_marker: str = None, point_color: str = None, separate_plots: bool = False,
+                title: str = None) -> None:
+    """
+
+    :param routes_lists: rozwiązanie zadania. Lista list (tras śmieciarek) -> to powinny być indeksy punktow w liscie :)
+    :param xy_points: wylosowane punkty (Wspolrzedne XY) jako krotki w liscie
+    :param colours: lista kolejnych kolorow (jezeli chcemy, żeby była narzucona)
+    :param arrow: Czy rysowac strzalki? Jesli nie zostana zwykle linie
+    :param point_marker: jakim symbolem maja byc zaznaczane punkty
+    :param point_color: kolor punktu
+    :param separate_plots: Czy chcemy mieć osobne wykresy dla każdej śmieciarki?
+    :param title: tytul wykresu narzucony z gory
+    :return:
+    """
+
     if colours is None:
-        colours = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'maroon', 'orangered', 'orange', 'lime']
+        colours = ['b', 'g', 'c', 'm', 'y', 'k', 'maroon', 'orangered', 'orange', 'lime', 'r']
     if point_marker is None:
         point_marker = 'o'
     if point_color is None:
@@ -60,14 +64,20 @@ def show_routes(routes_lists: List, xy_points: List, colours: List[str] = None, 
         if separate_plots or i == len(routes_lists)-1:
             plt.grid()
             if separate_plots:
-                plt.title('Trasa śmieciarki nr ' + str(i))
+                if title is None:
+                    plt.title('Trasa śmieciarki nr ' + str(i))
+                else:
+                    plt.title(title + '\tTrasa śmieciarki nr ' + str(i))
             else:
                 if arrow:
                     # plt.legend(lista_legendy)
                     pass
                 else:
                     plt.legend()
-                plt.title("Trasy smieciarek")
+                if title is None:
+                    plt.title("Trasy smieciarek")
+                else:
+                    plt.title(title)
             plt.scatter([xy[0] for xy in xy_points], [xy[1] for xy in xy_points], c=point_color, marker=point_marker)
             # Na koncu, aby punkty byly na wierzchu
 
