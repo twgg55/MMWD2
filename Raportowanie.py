@@ -88,11 +88,12 @@ def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_loca
 
             if i + 1 >= len(truck_route):  # To byl ostatni punkt trasy, Powrot do bazy
                 ride_cost[truck_route_index].append(
-                    ride_cost[truck_route_index][-1] + cost_matrix[_from_index][0])
-                _from_index = 0  # index bazy
+                    ride_cost[truck_route_index][-1] + cost_matrix[truck_route[i]][0])
+                _from_index = 0
                 real_route_solution[truck_route_index].append(0)
 
-            elif trucks_max_volumes[truck_route_index] < trucks_filled_volume[truck_route_index][-1] + rubbish_in_location[i+1]:
+            elif trucks_max_volumes[truck_route_index] < trucks_filled_volume[truck_route_index][-1] \
+                    + rubbish_in_location[truck_route[i+1]]:
                 # Smieciarka nie moze zaladowac nastepnego punktu, musi jechac sie rozladowac
                 ride_cost[truck_route_index].append(
                     ride_cost[truck_route_index][-1] + cost_matrix[_from_index][0])
@@ -100,7 +101,18 @@ def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_loca
                 real_route_solution[truck_route_index].append(0)
                 trucks_filled_volume[truck_route_index].append(0)  # Rozladowano
             else:
-                _from_index = i  # W nastepnym kroku, wyruszamy z punktu, ktory teraz odwiedzono
+                _from_index = truck_route[i]  # W nastepnym kroku, wyruszamy z punktu, ktory teraz odwiedzono
+
+        truck_returns[truck_route_index] = real_route_solution[truck_route_index].count(0) - 1
+
+        print('---------------------------------------')
+        print('truck_route_index\t', truck_route_index)
+        print('pojemnosc tej smieciarki ', trucks_max_volumes[truck_route_index])
+        print('real_route_solution[truck_route_index]', real_route_solution[truck_route_index])
+        print('truck_returns[truck_route_index]', truck_returns[truck_route_index])
+        print('trucks_filled_volume[truck_route_index]', trucks_filled_volume[truck_route_index])
+        print('ride_cost[truck_route_index])', ride_cost[truck_route_index])
+
 
     # Testowanie
     ShowSolutions.show_routes(routes_lists=real_route_solution, xy_points=xy_points, arrow=True, separate_plots=False,

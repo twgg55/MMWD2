@@ -21,10 +21,10 @@ iterations = 10 * 1000
 iterations_without_change_max_value = 257
 
 seed(1)
-min_rubbish = 1  # Minimalna ilosc smieci w lokalizacji
-max_rubbish = 10  # Maksymalna ilosc smieci w lokalizacji
+min_rubbish = 25  # Minimalna ilosc smieci w lokalizacji
+max_rubbish = 60  # Maksymalna ilosc smieci w lokalizacji
 
-liczba_lokacji = 250
+liczba_lokacji = 80
 liczba_smieciarek = 4
 
 bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(
