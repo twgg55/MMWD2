@@ -417,25 +417,24 @@ def ch_connect_close(_solution: List):
 '''
 
 
-def ban_max(_solution: List):  # zabron najdluższe przejazdy dla kazdej ze smieciarek
+def ban_max(_solution: List):  # zabron najdluższe przejazdy dla losowej śmieciarki
     Raportowanie.used_function('ban_max')
-    for route in _solution:
-        if len(route) > 2:
-            p2p_values = []
-            for i in range(len(route) - 1):
-                p2p_values.append(bin_locations[route[i]][route[i + 1]])
-            print(p2p_values)
+    random_truck = random.randint(0, len(_solution) - 1)
+    route = _solution[random_truck]
+    if len(route) > 2:
+        p2p_values = []
+        for i in range(len(route) - 1):
+            p2p_values.append(bin_locations[route[i]][route[i + 1]])
+        print(p2p_values)
 
-            od = route[p2p_values.index(max(p2p_values))]
-            do = route[p2p_values.index(max(p2p_values)) + 1]
-            print(od, do)
-            print(p2p_values.index(max(p2p_values)))
+        od = route[p2p_values.index(max(p2p_values))]
+        do = route[p2p_values.index(max(p2p_values)) + 1]
+        print(od, do)
+        print(p2p_values.index(max(p2p_values)))
 
-            tabu_iteration = 5  # mozna wybrac na ile iteracji
-            # zabroń i zmień(opcjonalnie)
-            add_to_TABU(TABU, [od, do, tabu_iteration], 2)  # zabron
-
-    # zapisc nie do tabu tylko zrobić liste i zrobic max dla calosci
+        tabu_iteration = 5  # mozna wybrac na ile iteracji
+        # zabroń i zmień(opcjonalnie)
+        add_to_TABU(TABU, [od, do, tabu_iteration], 2)  # zabron
 
 
 def ban_min(_solution: List):  # zabron zmeniac najkrotszych odcinkow
