@@ -40,38 +40,18 @@ def show_raport(routes_data: Dict = None, title: str = None):
         if max_length < len(key):
             max_length = len(key)
 
-        # Szukanie kluczy z fraza '_poprawa'
-        if 'POP_' in key[:4]:
-            ch_poprawa_keys.append(key)
-
-    show_used_functions_by_keyname('_poprawa', 'Funkcje zmieniajace rozwiazanie, ktore poprawily rozwiazanie')
-    show_used_functions_by_keyname('_True', 'Funkcje zabraniajace zmiany rozwiazania -> True')
-    show_used_functions_by_keyname('_False', 'Funkcje zabraniajace zmiany rozwiazania -> False')
-
-    """# Wypisanie wszystkich uzytych funkcji
+    # Wypisanie wszystkich uzytych funkcji
     for key in dict_function_usage.keys():
         tekst_wyrownawczy = '-'*(max_length-len(str(key)))
         procentowe_wykorzystanie = round(10000*len(dict_function_usage[key])/counter)/100
         print('- "' + str(key) + '"' + tekst_wyrownawczy + '\t->\t', len(dict_function_usage[key]),
               ' '*(10-len(str(len(dict_function_usage[key])))) + ' ~ ', procentowe_wykorzystanie, '%')
+    print('\n')
 
-    # Raport funkcji zmieniajacych rozwiazanie
-    print('\nFunkcje zmieniajace rozwiazanie, ile razy udalo sie je poprawic:')
-    print('Znaleziono ', len(ch_poprawa_keys), ' funkcji, ktore poprawily wynik')
+    show_used_functions_by_keyname('_poprawa', 'Funkcje zmieniajace rozwiazanie, ktore poprawily rozwiazanie')
+    show_used_functions_by_keyname('_True', 'Funkcje zabraniajace zmiany rozwiazania -> True')
+    show_used_functions_by_keyname('_False', 'Funkcje zabraniajace zmiany rozwiazania -> False')
 
-    key = '<nazwa_funkcji>'
-    tekst_wyrownawczy = '-' * (max_length - len(str(key)))
-    print('- "' + str(key) + '"' + tekst_wyrownawczy + '\t->\t', '<popraw>/<wywolan> ~ <procent> %')
-
-    for key in ch_poprawa_keys:
-        ch_f_key = key[4:]
-        tekst_wyrownawczy = '-'*(max_length-len(str(ch_f_key)))
-        procentowe_wykorzystanie = round(10000*len(dict_function_usage[key])/len(dict_function_usage[ch_f_key]))/100
-
-        print('- "' + str(ch_f_key) + '"' + tekst_wyrownawczy + '\t->\t', len(dict_function_usage[key]),
-              ' ' * (4 - len(str(len(dict_function_usage[key])))), '/', len(dict_function_usage[ch_f_key]),
-              ' '*(5-len(str(len(dict_function_usage[key])))) + ' ~ ', procentowe_wykorzystanie, '%')
-"""
     # ---------------------------------------------------------------------------------------------------------------
     if routes_data is not None:
         show_trasa_z_powrotami(routes_data, title)
@@ -292,9 +272,9 @@ def show_wypelnienie_od_trasy(routes_data: Dict, title: str = None):
                 routes_data['ride_cost'][truck_route_index],
                 routes_data['trucks_filled_volume'][truck_route_index] + [0], c=color_helper)
 
-            plt2.plot(
+            plt2.step(
                 routes_data['ride_cost'][truck_route_index],
-                routes_data['trucks_filled_volume'][truck_route_index] + [0], c=color_helper)
+                routes_data['trucks_filled_volume'][truck_route_index] + [0], c=color_helper, where='post')
 
         pass
 

@@ -22,7 +22,7 @@ iterations_without_change_max_value = 257
 min_rubbish = 25  # Minimalna ilosc smieci w lokalizacji
 max_rubbish = 60  # Maksymalna ilosc smieci w lokalizacji
 
-liczba_lokacji = 750
+liczba_lokacji = 100
 liczba_smieciarek = 5
 
 bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(
@@ -574,11 +574,16 @@ solution_change = True  # Po to aby pokazac pierwsza opcje
 print("START")
 print("First solution >", solution, count_cost(solution))
 # iterations = WARTOSC ^^^^ Na Gorze pliku
+
+co_ile_procent = 5
+helper_okres_jednego_procenta = co_ile_procent*iterations/100
+helper_procenty = 0
 for i in range(0, iterations):
+    if i % helper_okres_jednego_procenta == 0:
+        print(str(helper_procenty) + '%')
+        helper_procenty += co_ile_procent
+
     Raportowanie.counter += 1
-    if i % 1000 == 0:
-        pass
-        # print(i)
 
     '''zmien rozwiazanie'''
     x0 = deepcopy(x_opt)
