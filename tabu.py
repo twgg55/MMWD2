@@ -19,10 +19,10 @@ iterations = 1 * 40000
 iterations_without_change_max_value = 257
 
 # seed(1)
-min_rubbish = 25  # Minimalna ilosc smieci w lokalizacji
-max_rubbish = 60  # Maksymalna ilosc smieci w lokalizacji
+min_rubbish = 45  # Minimalna ilosc smieci w lokalizacji
+max_rubbish = 95  # Maksymalna ilosc smieci w lokalizacji
 
-liczba_lokacji = 100
+liczba_lokacji = 85
 liczba_smieciarek = 5
 
 bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_cost_matrix(
@@ -31,7 +31,7 @@ bin_locations, bin_point_list, ilosc_punktow_na_strefe = MatrixSegregation.make_
 
 rubbish_in_location = [0] + [randint(min_rubbish, max_rubbish) for i in range(liczba_lokacji-1)]
 # trucks_volume = [1000] * liczba_smieciarek
-trucks_volume = [10*randint(20, 80) for i in range(liczba_smieciarek)]
+trucks_volume = [10*randint(60, 80) for i in range(liczba_smieciarek)]
 trucks_returns = [0] * len(trucks_volume)
 
 
@@ -141,18 +141,24 @@ def ch_returns(solution: List) -> List:
     truck_max = trucks_returns.index(max(trucks_returns))  # zwraca ktora smieciarka wykonala najwiecej powrotow
     truck_min = trucks_returns.index(min(trucks_returns))  # zwraca ktora smieciarka wykonala najmniej powrotow
 
-    new_solution[truck_min].append(new_solution[truck_max][-1])
-    del (new_solution[truck_max][-1])
+    if len(new_solution[truck_max]) < 1:
+        return solution
 
-    #sprawdz czy kosz ktory funkcja chce zmienic nie jest w TABU
-    if check_ban_t1(new_solution[truck_max][-1]):
+    last_bin = new_solution[truck_max][-1]
+    new_solution[truck_min].append(last_bin)
+    # del (new_solution[truck_max][-1])
+    new_solution[truck_max].remove(last_bin)
+
+    # sprawdz czy kosz ktory funkcja chce zmienic nie jest w TABU
+    if check_ban_t1(last_bin):
         # Sprawdzanie czy nowe rozwiazanie jest dozwolone
         if check_ban_t2(new_solution) and check_ban_t3(new_solution):
             return new_solution
 
-    if (aspiration(solution,new_solution)): #jesli aspiracja zadziala
+    if aspiration(solution,new_solution):  # jesli aspiracja zadziala
         return new_solution
     return solution
+
 
 def ch_swap(solution: List) -> List:
     Raportowanie.used_function('ch_swap')
@@ -575,7 +581,7 @@ print("START")
 print("First solution >", solution, count_cost(solution))
 # iterations = WARTOSC ^^^^ Na Gorze pliku
 
-co_ile_procent = 5
+co_ile_procent = 1
 helper_okres_jednego_procenta = co_ile_procent*iterations/100
 helper_procenty = 0
 for i in range(0, iterations):
@@ -587,7 +593,7 @@ for i in range(0, iterations):
 
     '''zmien rozwiazanie'''
     x0 = deepcopy(x_opt)
-    change_probability = random.randint(1, 100)
+    change_probability = random.randint(1, 140)
 
 
     # if(change_probability in range(1,60)):
@@ -597,25 +603,33 @@ for i in range(0, iterations):
         # print('2')
         function_name = 'ch_swap_poprawa'
         x0 = ch_swap(x0)
-    if change_probability in range(20, 25):
+
+    if change_probability in range(21, 40):
         # print('3')
         function_name = 'ch_truck_poprawa'
         x0 = ch_truck(x0)
-    if change_probability in range(25, 45):
+
+    if change_probability in range(41, 60):
         # print('4')
         function_name = 'ch_bins_poprawa'
         x0 = ch_bins(x0)
-    if change_probability in range(45, 65):
+
+    if change_probability in range(61, 80):
         x0 = ch_del_max(x0)
         function_name = 'ch_del_max_poprawa'
-    if change_probability in range(65, 100):
+
+    if change_probability in range(81, 100):
         x0 = ch_connect_close(x0)
         function_name = 'ch_connect_close_poprawa'
-    if change_probability in range(1, 40):
+
+    if change_probability in range(101, 120):
         x0 = ch_move_tail(x0)
         function_name = 'ch_move_tail_poprawa'
 
-    # x = deepcopy(x0)
+    if change_probability in range(121, 140):
+        x0 = ch_returns(x0)
+        function_name = 'ch_returns_poprawa'
+
 
     # print(x, " -> ", count_cost(x))
 
