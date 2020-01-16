@@ -456,10 +456,24 @@ def ban_min(_solution: List):  # zabron zmeniac najkrotszych odcinkow
             add_to_TABU(TABU, [do, tabu_iteration], 1)  # zabron
 
 
-def ban_max3(_solution: List):
+def ban_max3(_solution: List): #zabron najdalszy kosz w smiecirce do ktorego najdlej z obydwu stron
     Raportowanie.used_function('ban_max3')
-    # TODO Brak kodu
-    print(max(solution))
+    random_truck = random.randint(0, len(_solution) - 1)
+
+    if len(_solution[random_truck]) > 3 :
+        do_od_max = 0 #max suma odcinków DO puntu i OD punktu
+        isolated_point = -1
+        for i in range(1,len(_solution[random_truck])-1):
+            do = bin_locations[_solution[random_truck][i-1]][_solution[random_truck][i]]
+            od = bin_locations[_solution[random_truck][i]][_solution[random_truck][i+1]]
+            do_od = do+od
+            if do_od > do_od_max:
+                do_od_max = do_od
+                isolated_point = _solution[random_truck][i]
+
+        if isolated_point != -1:
+            tabu_iteration = 500
+            add_to_TABU(TABU, [isolated_point, random_truck ,tabu_iteration], 3)  # zabron
 
 
 '''Sprawdz czy nie zabronione
@@ -662,14 +676,14 @@ for i in range(0, iterations):
 
     tabu_probability = random.randint(1, 100)
     if tabu_probability in (1, 40):
-        pass
-        #ban_min(x_opt)
+        ban_min(x_opt)
     elif tabu_probability in (20, 30):
-         pass
+        ban_max(x_opt)
     elif tabu_probability in (40, 50):
         pass
     elif tabu_probability in (50, 100):
-        pass
+        ban_max(x_opt)
+
 
     '''Pamiec srednioterminowa i kryterium aspiracji'''
     if iterations_without_change >= iterations_without_change_max_value:
