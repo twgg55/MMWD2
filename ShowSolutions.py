@@ -64,6 +64,7 @@ def show_routes(routes_lists: List, xy_points: List, colours: List[str] = None, 
         if separate_plots or i == len(routes_lists)-1:
             plt.grid()
             if separate_plots:
+                
                 if title is None:
                     plt.title('Trasa śmieciarki nr ' + str(i))
                 else:

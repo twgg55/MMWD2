@@ -25,28 +25,109 @@ def used_function(f_name: str, number: int = counter):
     pass
 
 
-def show_raport():
-    print('\nRaport uzycia funkcji:')
+def show_raport(routes_data: Dict = None, title: str = None):
+    """
+
+    :param routes_data:
+    :param title:
+    :return:
+    """
+    print('\nRaport uzycia funkcji: (funckja: show_raport)')
     max_length = 0
+    ch_poprawa_keys = list()
     for key in dict_function_usage.keys():
+        # szukanie najdluzszego slowa (frazy klucza) ze wszystkich
         if max_length < len(key):
             max_length = len(key)
 
+        # Szukanie kluczy z fraza '_poprawa'
+        if 'POP_' in key[:4]:
+            ch_poprawa_keys.append(key)
+
+    show_used_functions_by_keyname('_poprawa', 'Funkcje zmieniajace rozwiazanie, ktore poprawily rozwiazanie')
+    show_used_functions_by_keyname('_True', 'Funkcje zabraniajace zmiany rozwiazania -> True')
+    show_used_functions_by_keyname('_False', 'Funkcje zabraniajace zmiany rozwiazania -> False')
+
+    """# Wypisanie wszystkich uzytych funkcji
     for key in dict_function_usage.keys():
         tekst_wyrownawczy = '-'*(max_length-len(str(key)))
         procentowe_wykorzystanie = round(10000*len(dict_function_usage[key])/counter)/100
         print('- "' + str(key) + '"' + tekst_wyrownawczy + '\t->\t', len(dict_function_usage[key]),
               ' '*(10-len(str(len(dict_function_usage[key])))) + ' ~ ', procentowe_wykorzystanie, '%')
 
-    print('Program wykonal ', counter, ' iteracji.\n')
+    # Raport funkcji zmieniajacych rozwiazanie
+    print('\nFunkcje zmieniajace rozwiazanie, ile razy udalo sie je poprawic:')
+    print('Znaleziono ', len(ch_poprawa_keys), ' funkcji, ktore poprawily wynik')
+
+    key = '<nazwa_funkcji>'
+    tekst_wyrownawczy = '-' * (max_length - len(str(key)))
+    print('- "' + str(key) + '"' + tekst_wyrownawczy + '\t->\t', '<popraw>/<wywolan> ~ <procent> %')
+
+    for key in ch_poprawa_keys:
+        ch_f_key = key[4:]
+        tekst_wyrownawczy = '-'*(max_length-len(str(ch_f_key)))
+        procentowe_wykorzystanie = round(10000*len(dict_function_usage[key])/len(dict_function_usage[ch_f_key]))/100
+
+        print('- "' + str(ch_f_key) + '"' + tekst_wyrownawczy + '\t->\t', len(dict_function_usage[key]),
+              ' ' * (4 - len(str(len(dict_function_usage[key])))), '/', len(dict_function_usage[ch_f_key]),
+              ' '*(5-len(str(len(dict_function_usage[key])))) + ' ~ ', procentowe_wykorzystanie, '%')
+"""
+    # ---------------------------------------------------------------------------------------------------------------
+    if routes_data is not None:
+        show_trasa_z_powrotami(routes_data, title)
+        show_wypelnienie_od_trasy(routes_data, title)
+        show_info_trasy_smieciarek(routes_data, title)
+
+        pass
+    print('\nProgram wykonal ', counter, ' iteracji.\n')
     pass
+
+
+def show_used_functions_by_keyname(key_name: str, description: str):
+    # Nazwa funkcji ma postac functionName_KeyName_Value
+    # Usuwam to z konca i mam dostac nazwe funkcji!
+
+    # szukanie kluczy z fraza
+    ch_poprawa_keys = list()
+    max_length = 0
+    for key in dict_function_usage.keys():
+        if key_name in key:
+            ch_poprawa_keys.append(key)
+            # szukanie najdluzszego slowa (frazy klucza) ze wszystkich
+            if max_length < len(key):
+                max_length = len(key)
+
+    # Raport funkcji zawierajacych klucz
+    print('\n', description)
+    print('Znaleziono ', len(ch_poprawa_keys), ' funkcji zawierajacych szukana fraze: ', key_name)
+
+    for key in ch_poprawa_keys:
+        try:
+            ch_f_key = key[:key.index(key_name)]
+            tekst_wyrownawczy = '-' * (max_length - len(str(ch_f_key)))
+            procentowe_wykorzystanie = round(
+                10000 * len(dict_function_usage[key]) / len(dict_function_usage[ch_f_key])) / 100
+            """
+            - "ch_nazwa_f" --------- -> 124  /  240    ~  51 %
+            """
+            print('- "' + str(ch_f_key) + '"' + tekst_wyrownawczy + '\t->\t', len(dict_function_usage[key]),
+                  ' ' * (4 - len(str(len(dict_function_usage[key])))), '/', len(dict_function_usage[ch_f_key]),
+                  ' ' * (5 - len(str(len(dict_function_usage[key])))) + ' ~ ', procentowe_wykorzystanie, '%')
+        except KeyError:
+            print('\n\n---------\nERROR, Wyjatek w "show_used_functions_by_keyname"')
+            print('KeyError')
+            print('szukana fraza w nazwach funkcji to: "key_name"')
+            print('Nazwa funkcji bez tej frazy to: "ch_f_key"')
+            pass
+
+    return
 
 
 def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str = None, plot_y_label: str = None):
     # ShowSolutions.plt.scatter(range(counter), dict_function_usage[klucz_slowny_kosztu_rozwiazania], marker='.', c='r')
     if name_key not in dict_function_usage.keys():
         print('Brak takiego klucza w slowniku. Szukana fraza: "'+str(name_key)+'", type->', type(name_key))
-        return
+        return False
     ShowSolutions.plt.plot(dict_function_usage[name_key])
     ShowSolutions.plt.grid()
     ShowSolutions.plt.title(plot_title)
@@ -57,7 +138,7 @@ def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str 
 
 
 def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_location: List, trucks_max_volumes: List,
-                             xy_points: List) -> (List, List, List):
+                             xy_points: List) -> Dict:
     """
     Dostajac solution, zwracam dokladny przejazd smieciarki, liczbe powrotow, liczbe odwiedzonych punktow
         dla kazdej smieciarki
@@ -68,6 +149,7 @@ def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_loca
     :param _solution: rozwiazanie, ktore chcemy wyrysowac
     :return:
     """
+    routes_data = dict()
     real_route_solution = [[0] for n_truck_route in _solution]  # Wszystkie startuja z 0
     truck_returns = [0]*len(_solution)  # Ilosc powrotow kazdej smieciarki, Policzyc zera w wyznaczonej trasie
     trucks_filled_volume = [[0] for n_truck_route in _solution]  # Historia zapelnienia smieciarki poczas trasy
@@ -105,28 +187,121 @@ def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_loca
 
         truck_returns[truck_route_index] = real_route_solution[truck_route_index].count(0) - 1
 
-        print('---------------------------------------')
-        print('truck_route_index\t', truck_route_index)
-        print('pojemnosc tej smieciarki ', trucks_max_volumes[truck_route_index])
-        print('real_route_solution[truck_route_index]', real_route_solution[truck_route_index])
-        print('truck_returns[truck_route_index]', truck_returns[truck_route_index])
-        print('trucks_filled_volume[truck_route_index]', trucks_filled_volume[truck_route_index])
-        print('ride_cost[truck_route_index])', ride_cost[truck_route_index])
+        # print('Raport trasy smieciarki:')
+        # print('Smieciarka nr:\t', truck_route_index)
+        # print('Pojemnosc: ', trucks_max_volumes[truck_route_index])
+        # print('Ilosc punktow do odwiedzenia: ', len(real_route_solution[truck_route_index]))
+        # print('Liczba powrotow: ', truck_returns[truck_route_index])
+        # print('trucks_filled_volume[truck_route_index]', trucks_filled_volume[truck_route_index])
+        # print('ride_cost[truck_route_index])', ride_cost[truck_route_index])
+        pass
+
+    routes_data['real_route_solution'] = real_route_solution
+    routes_data['truck_returns'] = truck_returns
+    routes_data['trucks_filled_volume'] = trucks_filled_volume
+    routes_data['ride_cost'] = ride_cost
+    routes_data['solution'] = _solution
+    routes_data['trucks_max_volumes'] = trucks_max_volumes
+    routes_data['xy_points'] = xy_points
+
+    return routes_data
 
 
-    # Testowanie
-    ShowSolutions.show_routes(routes_lists=real_route_solution, xy_points=xy_points, arrow=True, separate_plots=False,
-                              title='Trasa z zaznaczonymi powrotami')
-
-
-def detailed_raport_last_solution():
+def show_trasa_z_powrotami(routes_data: Dict, title: str = None):
     """
-    Wypisanie szczegolowych informacji o rozwiazaniu:
-        Numer smieciarki, jej pojemnosc,
-        Ilosc punktow do odwiedzenia, ile powrotow jest przewidzianych,
-        Wyrysowanie dokladnej trasy wraz z powrotami
+
+    :param title:
+    :param routes_data:
     :return:
     """
+    if title is None:
+        title = ''
+    ShowSolutions.show_routes(routes_lists=routes_data['real_route_solution'], xy_points=routes_data['xy_points'],
+                              arrow=True, separate_plots=False,
+                              title='Trasa z zaznaczonymi powrotami. ' + title)
+    pass
 
 
+def show_info_trasy_smieciarek(routes_data: Dict, title: str = None):
+    """
+
+    :param title:
+    :param routes_data:
+    :return:
+    """
+    if title is None:
+        title = ''
+    print('\nRaport tras smieciarek: (info: ' + title + ')')
+    print('- Numer, Pojemnosc, Punktow, Powrotow')
+    for truck_route_index in range(len(routes_data['solution'])):
+        """
+            - Numer, Pojemnosc, Punktow, Powrotow
+        """
+        print('- ' + str(truck_route_index) + ' ' * (len('Numer') - len(str(truck_route_index))),
+              '  ' + str(routes_data['trucks_max_volumes'][truck_route_index]) + ' ' * (
+                          len('Pojemnosc') - len(str(routes_data['trucks_max_volumes'][truck_route_index]))),
+              '  ' + str(len(routes_data['real_route_solution'][truck_route_index])) + ' ' * (
+                          len('Punktow') - len(str(len(routes_data['real_route_solution'][truck_route_index])))),
+              '  ' + str(routes_data['truck_returns'][truck_route_index]) + ' ' * (
+                          len('Powrotow') - len(str(routes_data['truck_returns'][truck_route_index])))
+              )
+
+        pass
+    return
+
+
+def show_wypelnienie_od_trasy(routes_data: Dict, title: str = None):
+    """
+
+    :param title:
+    :param routes_data:
+    :return:
+    """
+    from matplotlib import pyplot as plt2
+    colours = ['b', 'g', 'c', 'm', 'y', 'k', 'maroon', 'orangered', 'orange', 'lime', 'r']
+
+    if title is None:
+        title = ''
+    for truck_route_index in range(len(routes_data['solution'])):
+        if len(routes_data['ride_cost'][truck_route_index]) <= 1 or len(routes_data['trucks_filled_volume'][truck_route_index]) <= 1:
+            # Printuj blad
+            print('\n\n---------------------------------')
+            print('Wyswietlanie informacji o bledzie () -> real_route_from_solution')
+            print('Trasa tej smieciarki jest pusta, stad nie mozna narysowac jej wykresu')
+            print('Smieciarka nr:\t', truck_route_index)
+            print('Pojemnosc: ', routes_data['trucks_max_volumes'][truck_route_index])
+            print('Ilosc punktow do odwiedzenia: ', len(routes_data['real_route_solution'][truck_route_index]))
+            print('Liczba powrotow: ', routes_data['truck_returns'][truck_route_index])
+            print('len(tego nizej)', len(routes_data['trucks_filled_volume'][truck_route_index]))
+            print('trucks_filled_volume[truck_route_index]', routes_data['trucks_filled_volume'][truck_route_index])
+            print('Na wykresie: ')
+            print('Wspolrzedna X -> ', "routes_data['ride_cost'][truck_route_index]",
+                  routes_data['ride_cost'][truck_route_index])
+            print('Wspolrzedna Y -> ', "routes_data['trucks_filled_volume'][truck_route_index]",
+                  routes_data['trucks_filled_volume'][truck_route_index])
+            print('---------------------------------\n')
+            plt2.scatter([0], [0])
+            plt2.plot([0], [0])
+        else:
+            helper = truck_route_index
+            while helper >= len(colours):
+                helper = helper - len(colours)
+            color_helper = colours[helper]
+            del helper
+            plt2.scatter(
+                routes_data['ride_cost'][truck_route_index],
+                routes_data['trucks_filled_volume'][truck_route_index] + [0], c=color_helper)
+
+            plt2.plot(
+                routes_data['ride_cost'][truck_route_index],
+                routes_data['trucks_filled_volume'][truck_route_index] + [0], c=color_helper)
+
+        pass
+
+    plt2.title('Zapelnienie smieciarek od przejechanego dystansu. ' + title)
+    plt2.grid()
+    plt2.legend(
+        ['ID=' + str(truck_route_index) + '; V=' + str(routes_data['trucks_max_volumes'][truck_route_index]) + '; Pkt=' + str(len(routes_data['solution'][truck_route_index])) for truck_route_index in
+         range(len(routes_data['solution']))])
+    plt2.show()
     pass
