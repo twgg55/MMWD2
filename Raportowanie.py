@@ -1,5 +1,4 @@
 import ShowSolutions
-import timeit
 #
 #
 # {'nazwa_funkcji': [1, 10, 22, 55]}  # Numery iteracji, w ktorych zostala uzyta
@@ -11,10 +10,21 @@ counter = 0  # Licznik iteracji dla glownego programu
 # 'koszt_rozwiazania' !!! klucz slowny
 klucz_slowny_optymalnego_kosztu_rozwiazania = 'optymalny_koszt_rozwiazania'
 klucz_slowny_kosztu_rozwiazania = 'koszt_rozwiazania'
-czas_uruchomienia = timeit.timeit()
+klucz_rozmiar_tabu_1 = 'tabu_1_rozmiar'
+klucz_rozmiar_tabu_2 = 'tabu_2_rozmiar'
+klucz_rozmiar_tabu_3 = 'tabu_3_rozmiar'
+
+zakaz_zliczania = True
 
 
 def used_function(f_name: str, number: int = counter):
+    if zakaz_zliczania:
+        return
+        # Pomijanie kluczy, gdy testowanie jest juz zbedne, ale zeby nie szukac tego po kodzie
+    wykluczone_klucze = ['truck_ride_cost', klucz_rozmiar_tabu_1, klucz_rozmiar_tabu_2, klucz_rozmiar_tabu_3]
+    if f_name in wykluczone_klucze:
+        return
+
     if f_name not in dict_function_usage.keys():
         # Stworz w slowniku odpowiednie pole
         dict_function_usage[f_name] = list()
@@ -26,6 +36,14 @@ def used_function(f_name: str, number: int = counter):
 
 
 def show_raport(routes_data: Dict = None, title: str = None):
+    if zakaz_zliczania:
+        if routes_data is not None:
+            show_info_trasy_smieciarek(routes_data, title)
+            show_trasa_z_powrotami(routes_data, title, arrow=False)
+            show_wypelnienie_od_trasy(routes_data, title)
+            show_trasa_z_powrotami(routes_data, title, separate_plots=False)
+        print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
+        return
     """
 
     :param routes_data:
@@ -34,7 +52,6 @@ def show_raport(routes_data: Dict = None, title: str = None):
     """
     print('\nRaport uzycia funkcji: (funckja: show_raport)')
     max_length = 0
-    ch_poprawa_keys = list()
     for key in dict_function_usage.keys():
         # szukanie najdluzszego slowa (frazy klucza) ze wszystkich
         if max_length < len(key):
@@ -64,6 +81,9 @@ def show_raport(routes_data: Dict = None, title: str = None):
 
 
 def show_used_functions_by_keyname(key_name: str, description: str):
+    if zakaz_zliczania:
+        print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
+        return
     # Nazwa funkcji ma postac functionName_KeyName_Value
     # Usuwam to z konca i mam dostac nazwe funkcji!
 
@@ -104,6 +124,9 @@ def show_used_functions_by_keyname(key_name: str, description: str):
 
 
 def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str = None, plot_y_label: str = None):
+    if zakaz_zliczania:
+        print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
+        return
     # ShowSolutions.plt.scatter(range(counter), dict_function_usage[klucz_slowny_kosztu_rozwiazania], marker='.', c='r')
     if name_key not in dict_function_usage.keys():
         print('Brak takiego klucza w slowniku. Szukana fraza: "'+str(name_key)+'", type->', type(name_key))
@@ -113,6 +136,24 @@ def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str 
     ShowSolutions.plt.title(plot_title)
     ShowSolutions.plt.xlabel(plot_x_label)
     ShowSolutions.plt.ylabel(plot_y_label)
+    ShowSolutions.plt.show()
+    pass
+
+
+def show_tabu_size(plot_title: str = 'Rozmiar list tabu', plot_x_label: str = 'Iteracje', plot_y_label: str = 'Rozmiar'):
+    if zakaz_zliczania:
+        print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
+        return
+    for name_key in [klucz_rozmiar_tabu_1, klucz_rozmiar_tabu_2, klucz_rozmiar_tabu_3]:
+        if name_key not in dict_function_usage.keys():
+            print('\nERR\nBrak takiego klucza w slowniku. Szukana fraza: "' + str(name_key) + '", type->', type(name_key))
+            return False
+        ShowSolutions.plt.plot(dict_function_usage[name_key], label=name_key)
+    ShowSolutions.plt.grid()
+    ShowSolutions.plt.title(plot_title)
+    ShowSolutions.plt.xlabel(plot_x_label)
+    ShowSolutions.plt.ylabel(plot_y_label)
+    ShowSolutions.plt.legend()
     ShowSolutions.plt.show()
     pass
 
@@ -187,9 +228,12 @@ def real_route_from_solution(_solution: List, cost_matrix: List, rubbish_in_loca
     return routes_data
 
 
-def show_trasa_z_powrotami(routes_data: Dict, title: str = None):
+def show_trasa_z_powrotami(routes_data: Dict, title: str = None, separate_plots: bool = False,
+                           arrow: bool = True):
     """
 
+    :param arrow:
+    :param separate_plots:
     :param title:
     :param routes_data:
     :return:
@@ -197,7 +241,7 @@ def show_trasa_z_powrotami(routes_data: Dict, title: str = None):
     if title is None:
         title = ''
     ShowSolutions.show_routes(routes_lists=routes_data['real_route_solution'], xy_points=routes_data['xy_points'],
-                              arrow=True, separate_plots=False,
+                              arrow=arrow, separate_plots=separate_plots,
                               title='Trasa z zaznaczonymi powrotami. ' + title)
     pass
 
@@ -221,7 +265,7 @@ def show_info_trasy_smieciarek(routes_data: Dict, title: str = None):
               '  ' + str(routes_data['trucks_max_volumes'][truck_route_index]) + ' ' * (
                           len('Pojemnosc') - len(str(routes_data['trucks_max_volumes'][truck_route_index]))),
               '  ' + str(len(routes_data['real_route_solution'][truck_route_index])) + ' ' * (
-                          len('Punktow') - len(str(len(routes_data['real_route_solution'][truck_route_index])))),
+                          len('Punktow') - len(str(len(routes_data['real_route_solution'][truck_route_index]))) - 1),
               '  ' + str(routes_data['truck_returns'][truck_route_index]) + ' ' * (
                           len('Powrotow') - len(str(routes_data['truck_returns'][truck_route_index])))
               )
