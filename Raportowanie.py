@@ -9,6 +9,7 @@ dict_function_usage = dict()
 counter = 0  # Licznik iteracji dla glownego programu
 # 'koszt_rozwiazania' !!! klucz slowny
 klucz_slowny_optymalnego_kosztu_rozwiazania = 'optymalny_koszt_rozwiazania'
+klucz_slowny_lista_koszt_od_iteracji = 'koszt_rozw_od_iteracji_lista'
 klucz_slowny_kosztu_rozwiazania = 'koszt_rozwiazania'
 klucz_rozmiar_tabu_1 = 'tabu_1_rozmiar'
 klucz_rozmiar_tabu_2 = 'tabu_2_rozmiar'
@@ -17,10 +18,17 @@ klucz_rozmiar_tabu_3 = 'tabu_3_rozmiar'
 zakaz_zliczania = True
 
 
-def used_function(f_name: str, number: int = counter):
+def used_function(f_name: str, number=counter):
     if zakaz_zliczania:
+        # zliczaj tylko klucz_slowny_lista_koszt_od_iteracji
+        if f_name == klucz_slowny_lista_koszt_od_iteracji:
+            if f_name not in dict_function_usage.keys():
+                # Stworz w slowniku odpowiednie pole
+                dict_function_usage[f_name] = list()
+            dict_function_usage[f_name].append(number)
         return
-        # Pomijanie kluczy, gdy testowanie jest juz zbedne, ale zeby nie szukac tego po kodzie
+
+    # Pomijanie kluczy, gdy testowanie jest juz zbedne, ale zeby nie szukac tego po kodzie
     wykluczone_klucze = ['truck_ride_cost', klucz_rozmiar_tabu_1, klucz_rozmiar_tabu_2, klucz_rozmiar_tabu_3]
     if f_name in wykluczone_klucze:
         return
@@ -126,6 +134,16 @@ def show_used_functions_by_keyname(key_name: str, description: str):
 def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str = None, plot_y_label: str = None):
     if zakaz_zliczania:
         print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
+        print('Wyswietlanie klucz_slowny_lista_koszt_od_iteracji: ', klucz_slowny_lista_koszt_od_iteracji)
+        x = [elem[0] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
+        y = [elem[1] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
+        ShowSolutions.plt.plot(x, y)
+        del x, y
+        ShowSolutions.plt.grid()
+        ShowSolutions.plt.title(plot_title)
+        ShowSolutions.plt.xlabel(plot_x_label)
+        ShowSolutions.plt.ylabel(plot_y_label)
+        ShowSolutions.plt.show()
         return
     # ShowSolutions.plt.scatter(range(counter), dict_function_usage[klucz_slowny_kosztu_rozwiazania], marker='.', c='r')
     if name_key not in dict_function_usage.keys():

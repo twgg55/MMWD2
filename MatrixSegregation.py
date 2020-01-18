@@ -140,7 +140,8 @@ def create_cost_matrix(points_list: List):
                 delta_x = abs(points_list[row][0] - points_list[col][0])
                 delta_y = abs(points_list[row][1] - points_list[col][1])
                 # list_helper[col] = int((delta_x**2 + delta_y**2)**(1/2))  # Odleglosc w lini prostej
-                list_helper[col] = (delta_x ** 2 + delta_y ** 2) ** (1 / 2)
+
+                list_helper[col] = ((delta_x ** 2 + delta_y ** 2) ** (1 / 2))
             pass
         cost_matrix.append(deepcopy(list_helper))
         del list_helper

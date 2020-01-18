@@ -7,10 +7,12 @@ import Raportowanie
 from datetime import time, datetime
 import pickle  # Zapisywanie danych do plikow
 
+czy_uzywac_tabu = True
+
 czy_wczytac_plik = True
-znacznik_wczytywanego_pliku = 'sym_1'
+znacznik_wczytywanego_pliku = 'sym_maleSmieciarki'
 czy_zapisac_plik = True
-znacznik_zapisywanego_pliku = 'sym_1'
+znacznik_zapisywanego_pliku = 'sym_DUZESmieciarki'
 
 czas_start = datetime.utcnow()
 
@@ -26,7 +28,7 @@ aspiration_procentowy_prog = 0.05
 # ilosc_punktow_na_strefe - ile punktow jest w kazdej ze stref (podzial ukladu wspolrzednych na strefy wg kata)
 #
 # Liczba iteracji calego algorytmu
-iterations = 500 * 1000
+iterations = 1200 * 1000
 # Maksymalna ilosc iteracji bez polepszenia wartosci
 iterations_without_change_max_value = 512
 
@@ -34,12 +36,12 @@ iterations_without_change_max_value = 512
 min_rubbish = 60  # Minimalna ilosc smieci w lokalizacji
 max_rubbish = 750  # Maksymalna ilosc smieci w lokalizacji
 
-min_XY_value = -1000  # Minimalna wartość wspolrzednych X,Y dla losowanych punktow
-max_XY_value = 4000  # Maksymalna wartość wspolrzednych X,Y dla losowanych punktow
+min_XY_value = -300  # Minimalna wartość wspolrzednych X,Y dla losowanych punktow
+max_XY_value = 700  # Maksymalna wartość wspolrzednych X,Y dla losowanych punktow
 
 
-liczba_lokacji = 450
-liczba_smieciarek = 7
+liczba_lokacji = 112
+liczba_smieciarek = 4
 
 
 def save_obj(object_name, file_name: str, rozszerzenie: str = '.pkl'):
@@ -91,11 +93,14 @@ def zapisz_dane(file_name: str = znacznik_zapisywanego_pliku):
     for key in dict_helper:
         save_obj(file_name=file_name+'_'+key, object_name=dict_helper[key])
         print('Zapisano: ', file_name + '_' + key)
+
     raport = '\n\nParametry symulacji:' + '\nMinimalna ilosc smieci = ', str(min_rubbish)\
              + '\nMaksymalna ilosc smieci = ', str(max_rubbish) + '\nilosc punktow = ' + str(liczba_lokacji)\
              + '\nilosc smieciarek = ' + str(liczba_smieciarek) + '\nPojenosc smieciarek = ' + str(trucks_volume)\
-             + '\nmin_xy_value = ' + str(min_XY_value) + '\nmax_xy_value = ' + str(max_XY_value) + '\n\n'
-
+             + '\nmin_xy_value = ' + str(min_XY_value) + '\nmax_xy_value = ' + str(max_XY_value)\
+             + '\nkoszty_uruchomienia_smieciarki' + str(koszty_uruchomienia_smieciarki)\
+             + '\nkoszty_rozladunku_smieciarki' + str(koszty_rozladunku_smieciarki)\
+             + '\n\n'
     save_obj(file_name=file_name + '_raport', object_name=raport, rozszerzenie='.txt')
 
     print('\n\n')
@@ -118,11 +123,10 @@ if czy_wczytac_plik is False:
         liczba_lokacji, liczba_smieciarek, function_id=2, min_val=min_XY_value, max_val=max_XY_value)
 
     rubbish_in_location = [0] + [randint(min_rubbish, max_rubbish) for i in range(liczba_lokacji - 1)]
-    trucks_volume = [100 * randint(120, 150) for i in range(liczba_smieciarek)]
-
+    trucks_volume = [100*70] + [100 * randint(120, 150) for i in range(liczba_smieciarek-2)] + [100*150]
     # Dodanie kosztu startu i kosztu rozladunku
-    koszty_uruchomienia_smieciarki = [volume for volume in trucks_volume]
-    koszty_rozladunku_smieciarki = [min(trucks_volume)/10 for volume in trucks_volume]
+    koszty_uruchomienia_smieciarki = [volume/10 for volume in trucks_volume]
+    koszty_rozladunku_smieciarki = [2*min(trucks_volume)/100 for volume in trucks_volume]
     trucks_returns = [0] * len(trucks_volume)
     if czy_zapisac_plik:
         zapisz_dane()
@@ -141,7 +145,6 @@ else:
     print('\nPoprawnie wczytano pliki.\n')
     pass
 
-
 print('--------------------------------\nParametry symulacji:')
 print('Liczba iteracji = ', iterations)
 print('Liczba iteracji bez zmiany= ', iterations_without_change_max_value)
@@ -150,6 +153,8 @@ print('Maksymalna ilosc smieci = ', max_rubbish)
 print('ilosc punktow = ', liczba_lokacji)
 print('ilosc smieciarek = ', liczba_smieciarek)
 print('Pojenosc smieciarek = ', trucks_volume)
+print('koszty_uruchomienia_smieciarki', koszty_uruchomienia_smieciarki)
+print('koszty_rozladunku_smieciarki', koszty_rozladunku_smieciarki)
 print('Wklej te dane to folderu na dysku!\n--------------------------------------')
 
 
@@ -196,26 +201,28 @@ def truck_ride_cost(locations: List, num_truck: int):  # zwraca koszt dla jednej
     # Dodanie kosztu uruchomienia
     ride_cost += koszty_uruchomienia_smieciarki[num_truck]
 
+    mnoznik_zalezny_pojemnosci = trucks_volume[num_truck]/max(trucks_volume)
     powrotow = 0
 
     for i in range(0, len(locations)):
         trucks_filled_volume[num_truck] += rubbish_in_location[locations[i]]  # zaladowanie smieci
 
         if i + 1 >= len(locations):  # jesli ostatni
-            ride_cost += bin_locations[locations[i]][0]
+            ride_cost += bin_locations[locations[i]][0] * mnoznik_zalezny_pojemnosci
             return ride_cost
 
         if trucks_volume[num_truck] < trucks_filled_volume[num_truck] + rubbish_in_location[locations[i+1]]:  # wroc do bazy jesli smieciarka pelna
             powrotow += 1
-            ride_cost += bin_locations[locations[i]][0]
+            ride_cost += bin_locations[locations[i]][0] * mnoznik_zalezny_pojemnosci
             trucks_filled_volume[num_truck] = 0
-            ride_cost += bin_locations[0][locations[i + 1]]
+            ride_cost += bin_locations[0][locations[i + 1]] * mnoznik_zalezny_pojemnosci
             trucks_returns[num_truck] = trucks_returns[num_truck] + 1
             # Dodanie Kosztu rozladnuku
-            ride_cost += (powrotow - 1)**2 * koszty_rozladunku_smieciarki[num_truck]
+            # ride_cost += (powrotow - 1)**2 * koszty_rozladunku_smieciarki[num_truck]
+            ride_cost += powrotow**3 * koszty_rozladunku_smieciarki[num_truck]
 
         else:
-            ride_cost += bin_locations[locations[i]][locations[i + 1]]
+            ride_cost += bin_locations[locations[i]][locations[i + 1]] * mnoznik_zalezny_pojemnosci
 
     return ride_cost
 
@@ -608,6 +615,8 @@ def ban_max3(_solution: List): #zabron najdalszy kosz w smiecirce do ktorego naj
 
 # jesli funkcja chce zmienic i ty kosz to zwroc False
 def check_ban_t1(point: int) -> bool:
+    if czy_uzywac_tabu is False:
+        return True
     Raportowanie.used_function('check_ban_t1')
     if TABU[1] == []:
         Raportowanie.used_function('check_ban_t1_True')
@@ -625,6 +634,8 @@ def check_ban_t1(point: int) -> bool:
 
 # jesli w nowym rozwiazaniu kosze z Tabu sa obok siebie zroci False
 def check_ban_t2(solution: List) -> bool:
+    if czy_uzywac_tabu is False:
+        return True
     Raportowanie.used_function('check_ban_t2')
     if TABU[2] == []:
         Raportowanie.used_function('check_ban_t2_True')
@@ -644,6 +655,8 @@ def check_ban_t2(solution: List) -> bool:
 
 # jesli w nowym rozwiazaniu kosz jesz w zabronionej smieciarce zwroc False
 def check_ban_t3(solution: List) -> bool:
+    if czy_uzywac_tabu is False:
+        return True
     Raportowanie.used_function('check_ban_t3')
     if TABU[3] == []:
         Raportowanie.used_function('check_ban_t3_True')
@@ -837,7 +850,7 @@ for i in range(0, iterations):
             # print("x0", x0, " --> ", cost_x0)
 
             x_opt = deepcopy(x0)
-
+            Raportowanie.used_function(Raportowanie.klucz_slowny_lista_koszt_od_iteracji, [i, cost_x_opt])
             Raportowanie.used_function(function_name, i)
             solution_change = True
             iterations_without_change = 0
@@ -885,7 +898,7 @@ for i in range(0, iterations):
             solution_change = False
 
         # Dodanie do raportu aktualnie liczone rozwiazania
-        Raportowanie.used_function(Raportowanie.klucz_slowny_optymalnego_kosztu_rozwiazania, cost_x_opt)
+        # Raportowanie.used_function(Raportowanie.klucz_slowny_optymalnego_kosztu_rozwiazania, cost_x_opt)
         Raportowanie.used_function(Raportowanie.klucz_rozmiar_tabu_1, len(TABU[1]))
         Raportowanie.used_function(Raportowanie.klucz_rozmiar_tabu_2, len(TABU[2]))
         Raportowanie.used_function(Raportowanie.klucz_rozmiar_tabu_3, len(TABU[3]))
@@ -897,6 +910,27 @@ for i in range(0, iterations):
 if medium_term_memory:
     min_road = min(medium_term_memory.keys())
     x_opt = deepcopy(medium_term_memory[min_road])
+
+
+real_route_dict = Raportowanie.real_route_from_solution(
+    _solution=x_opt,
+    cost_matrix=bin_locations,
+    rubbish_in_location=rubbish_in_location,
+    trucks_max_volumes=trucks_volume,
+    xy_points=bin_point_list
+)
+
+
+def zapisz_wyniki(file_name: str = znacznik_zapisywanego_pliku):
+    dict_helper = {
+        'x_opt': x_opt,
+        'count_cost(x_opt)': count_cost(x_opt),
+        'dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]': Raportowanie.dict_function_usage[Raportowanie.klucz_slowny_lista_koszt_od_iteracji],
+        'real_route_dict': real_route_dict
+    }
+    for key in dict_helper:
+        save_obj(file_name=file_name + '_ROZWIAZANIE_' + key, object_name=dict_helper[key])
+        print('Zapisano: ', file_name + '_' + key)
 
 
 """print("Wynik:")
@@ -915,16 +949,10 @@ Raportowanie.show_tabu_size()
 
 # Raportowanie.show_routes(x_opt, bin_point_list)
 
-real_route_dict = Raportowanie.real_route_from_solution(
-    _solution=x_opt,
-    cost_matrix=bin_locations,
-    rubbish_in_location=rubbish_in_location,
-    trucks_max_volumes=trucks_volume,
-    xy_points=bin_point_list
-)
+
 
 Raportowanie.show_raport(real_route_dict, title='Ostateczne rozwiazanie.')
-
+zapisz_wyniki()
 
 
 
