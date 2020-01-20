@@ -15,7 +15,7 @@ klucz_rozmiar_tabu_1 = 'tabu_1_rozmiar'
 klucz_rozmiar_tabu_2 = 'tabu_2_rozmiar'
 klucz_rozmiar_tabu_3 = 'tabu_3_rozmiar'
 
-zakaz_zliczania = True
+zakaz_zliczania = False
 
 
 def used_function(f_name: str, number=counter):
@@ -134,17 +134,17 @@ def show_used_functions_by_keyname(key_name: str, description: str):
 def show_solution_cost(name_key: str, plot_title: str = None, plot_x_label: str = None, plot_y_label: str = None):
     if zakaz_zliczania:
         print('Zabroniono zliczania -> parametr "zakaz_zliczania" w pliku Raportowanie')
-        print('Wyswietlanie klucz_slowny_lista_koszt_od_iteracji: ', klucz_slowny_lista_koszt_od_iteracji)
-        x = [elem[0] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
-        y = [elem[1] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
-        ShowSolutions.plt.plot(x, y)
-        del x, y
-        ShowSolutions.plt.grid()
-        ShowSolutions.plt.title(plot_title)
-        ShowSolutions.plt.xlabel(plot_x_label)
-        ShowSolutions.plt.ylabel(plot_y_label)
-        ShowSolutions.plt.show()
-        return
+    print('Wyswietlanie klucz_slowny_lista_koszt_od_iteracji: ', klucz_slowny_lista_koszt_od_iteracji)
+    x = [elem[0] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
+    y = [elem[1] for elem in dict_function_usage[klucz_slowny_lista_koszt_od_iteracji]]
+    ShowSolutions.plt.plot(x, y)
+    del x, y
+    ShowSolutions.plt.grid()
+    ShowSolutions.plt.title(plot_title)
+    ShowSolutions.plt.xlabel(plot_x_label)
+    ShowSolutions.plt.ylabel(plot_y_label)
+    ShowSolutions.plt.show()
+
     # ShowSolutions.plt.scatter(range(counter), dict_function_usage[klucz_slowny_kosztu_rozwiazania], marker='.', c='r')
     if name_key not in dict_function_usage.keys():
         print('Brak takiego klucza w slowniku. Szukana fraza: "'+str(name_key)+'", type->', type(name_key))

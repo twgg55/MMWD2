@@ -10,9 +10,9 @@ import pickle  # Zapisywanie danych do plikow
 czy_uzywac_tabu = True
 
 czy_wczytac_plik = True
-znacznik_wczytywanego_pliku = 'sym_maleSmieciarki'
+znacznik_wczytywanego_pliku = 'sym_RoznePrawdopodobienstwa'
 czy_zapisac_plik = True
-znacznik_zapisywanego_pliku = 'sym_DUZESmieciarki'
+znacznik_zapisywanego_pliku = 'sym_RoznePrawdopodobienstwa_WartosciNR2'
 
 czas_start = datetime.utcnow()
 
@@ -34,13 +34,13 @@ iterations_without_change_max_value = 512
 
 # seed(1)
 min_rubbish = 60  # Minimalna ilosc smieci w lokalizacji
-max_rubbish = 750  # Maksymalna ilosc smieci w lokalizacji
+max_rubbish = 550  # Maksymalna ilosc smieci w lokalizacji
 
-min_XY_value = -300  # Minimalna wartość wspolrzednych X,Y dla losowanych punktow
-max_XY_value = 700  # Maksymalna wartość wspolrzednych X,Y dla losowanych punktow
+min_XY_value = -500  # Minimalna wartość wspolrzednych X,Y dla losowanych punktow
+max_XY_value = 500  # Maksymalna wartość wspolrzednych X,Y dla losowanych punktow
 
 
-liczba_lokacji = 112
+liczba_lokacji = 350
 liczba_smieciarek = 4
 
 
@@ -769,7 +769,7 @@ for i in range(0, iterations):
         x0 = deepcopy(x_opt)
         change_probability = random.randint(1, 140)
 
-        change_probability = random.randint(1, 100)
+        """change_probability = random.randint(1, 100)
         function_name = 'ch_swap_nie_wykonano_zadnej_funkcji'
         if change_probability in range(1, 8):  # losowe
             x0 = ch_swap(x0)
@@ -800,9 +800,9 @@ for i in range(0, iterations):
 
         if change_probability in range(int(threshold2), 100):  # ma być coraz cześciej
             x0 = ch_connect_close(x0)
-            function_name = 'ch_connect_close_poprawa'
+            function_name = 'ch_connect_close_poprawa'"""
 
-        """# if(change_probability in range(1,60)):
+        # if(change_probability in range(1,60)):
         # print('1')
         # x0 = ch_returns(x0)
         function_name = 'ch_swap_nie_wykonano_zadnej_funkcji'
@@ -835,7 +835,7 @@ for i in range(0, iterations):
 
         if change_probability in range(121, 140):
             x0 = ch_returns(x0)
-            function_name = 'ch_returns_poprawa'"""
+            function_name = 'ch_returns_poprawa'
 
 
         # print(x, " -> ", count_cost(x))
