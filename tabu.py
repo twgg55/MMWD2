@@ -9,9 +9,9 @@ import pickle  # Zapisywanie danych do plikow
 
 czy_uzywac_tabu = True
 
-czy_wczytac_plik = True
+czy_wczytac_plik = False
 znacznik_wczytywanego_pliku = 'sym_RoznePrawdopodobienstwa'
-czy_zapisac_plik = True
+czy_zapisac_plik = False
 znacznik_zapisywanego_pliku = 'sym_RoznePrawdopodobienstwa_WartosciNR2'
 
 czas_start = datetime.utcnow()
